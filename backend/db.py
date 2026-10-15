@@ -103,7 +103,9 @@ TABLES = [
         phone TEXT,
         status TEXT NOT NULL DEFAULT 'new',
         created_at TEXT,
-        updated_at TEXT
+        updated_at TEXT,
+        lat REAL,
+        lon REAL
     )""",
     """CREATE TABLE IF NOT EXISTS pump_commands (
         id INTEGER PRIMARY KEY,
@@ -134,12 +136,29 @@ def get_conn() -> sqlite3.Connection:
     return conn
 
 
+# คอลัมน์ที่เพิ่มทีหลัง: DB เดิม (เช่นบน hosting) สร้างตารางไว้ก่อนแล้ว CREATE TABLE IF NOT EXISTS จึงไม่เพิ่มให้
+MIGRATIONS = {
+    "incident_reports": [("lat", "REAL"), ("lon", "REAL")],
+}
+
+
+def _migrate(conn) -> None:
+    """เพิ่มคอลัมน์ที่ยังไม่มีด้วย ALTER TABLE ADD COLUMN รันซ้ำได้ ไม่ลบหรือสร้างตารางใหม่
+    ชื่อตารางและคอลัมน์มาจาก MIGRATIONS ที่เป็นค่าคงที่ ไม่ได้รับจากภายนอก"""
+    for table, columns in MIGRATIONS.items():
+        existing = {r["name"] for r in conn.execute(f"PRAGMA table_info({table})")}
+        for name, col_type in columns:
+            if name not in existing:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {col_type}")
+
+
 def init_db() -> None:
     """สร้างตารางที่ยังไม่มี รันซ้ำได้ ไม่ลบหรือแก้ตารางเดิม"""
     conn = get_conn()
     try:
         for sql in TABLES:
             conn.execute(sql)
+        _migrate(conn)
         conn.commit()
     finally:
         conn.close()

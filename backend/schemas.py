@@ -1,6 +1,6 @@
-from typing import Literal, Optional
+from typing import Annotated, Literal, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 # รูปแบบอีเมลอย่างง่าย (ไม่ใช้ EmailStr เพราะต้องติดตั้ง email-validator เพิ่ม)
 EMAIL_PATTERN = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
@@ -43,10 +43,25 @@ class IncidentIn(BaseModel):
     description: str = Field(min_length=1, max_length=2000)
     address: Optional[str] = Field(default=None, max_length=500)
     phone: Optional[str] = Field(default=None, max_length=20)
+    # พิกัดไม่บังคับ แต่ต้องส่งคู่กัน strict ไม่รับตัวเลขที่เป็นข้อความ ไม่รับ NaN/inf
+    lat: Optional[float] = Field(default=None, ge=-90, le=90, strict=True, allow_inf_nan=False)
+    lon: Optional[float] = Field(default=None, ge=-180, le=180, strict=True, allow_inf_nan=False)
+
+    @model_validator(mode="after")
+    def _lat_lon_pair(self):
+        if (self.lat is None) != (self.lon is None):
+            raise ValueError("lat และ lon ต้องส่งคู่กัน หรือไม่ส่งเลย")
+        return self
 
 
 class IncidentStatusIn(BaseModel):
     status: Literal["new", "in_progress", "resolved"]
+
+
+class AlertIn(BaseModel):
+    # ตัดช่องว่างหัวท้ายก่อนนับความยาว ข้อความว่างหรือมีแต่ช่องว่างจึงตอบ 422
+    message: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)]
+    severity: Literal["watch", "warning", "critical"] = "watch"
 
 
 class PumpCommandIn(BaseModel):

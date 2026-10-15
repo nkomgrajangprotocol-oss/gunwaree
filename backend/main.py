@@ -1,4 +1,5 @@
 import json
+import math
 import sqlite3
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
@@ -9,11 +10,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import fetch_latest
 import risk
-from auth import (current_user, hash_password, issue_reset_code, issue_token, require_admin,
+from auth import (hash_password, issue_reset_code, issue_token, require_admin,
                   require_client, require_device, use_reset_code, verify_password)
 from db import TH_TZ, get_conn, latest_station_readings, now_th, upsert_station
-from schemas import (DeviceReadingIn, ForgotPasswordIn, IncidentIn, IncidentStatusIn, LoginIn,
-                     PumpCommandIn, ResetPasswordIn, SignupIn)
+from schemas import (AlertIn, DeviceReadingIn, ForgotPasswordIn, IncidentIn, IncidentStatusIn,
+                     LoginIn, PumpCommandIn, ResetPasswordIn, SignupIn)
 from seed import seed
 
 
@@ -272,7 +273,8 @@ def reset_password(body: ResetPasswordIn):
 # ---------- แจ้งเตือนและแจ้งเหตุ ----------
 
 @app.get("/alerts")
-def alerts(user: dict = Depends(current_user)):
+def alerts():
+    # เปิดสาธารณะ ไม่ตรวจ token (header Authorization ที่ส่งมาถูกเมิน)
     conn = get_conn()
     try:
         rows = conn.execute(
@@ -291,9 +293,9 @@ def create_incident(body: IncidentIn, user: dict = Depends(require_client)):
     try:
         # user_id มาจาก token เท่านั้น ไม่รับจากผู้ใช้
         cur = conn.execute(
-            "INSERT INTO incident_reports (user_id, description, address, phone, status, created_at, updated_at) "
-            "VALUES (?, ?, ?, ?, 'new', ?, ?)",
-            (user["id"], body.description, body.address, body.phone, now, now),
+            "INSERT INTO incident_reports (user_id, description, address, phone, lat, lon, status, "
+            "created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'new', ?, ?)",
+            (user["id"], body.description, body.address, body.phone, body.lat, body.lon, now, now),
         )
         conn.commit()
         return {"id": cur.lastrowid, "status": "new"}
@@ -306,7 +308,7 @@ def my_incidents(user: dict = Depends(require_client)):
     conn = get_conn()
     try:
         rows = conn.execute(
-            "SELECT id, description, address, phone, status, created_at, updated_at "
+            "SELECT id, description, address, phone, lat, lon, status, created_at, updated_at "
             "FROM incident_reports WHERE user_id = ? ORDER BY id DESC",
             (user["id"],),
         ).fetchall()
@@ -328,6 +330,24 @@ def admin_alerts(status: Optional[Literal["pending", "sent"]] = None,
             (status, status),
         ).fetchall()
         return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+@app.post("/admin/alerts", status_code=201)
+def admin_create_alert(body: AlertIn, admin: dict = Depends(require_admin)):
+    now = now_th()
+    conn = get_conn()
+    try:
+        # รออนุมัติก่อนเสมอ ขึ้นใน /alerts เมื่อกด /admin/alerts/{id}/send
+        cur = conn.execute(
+            "INSERT INTO alerts (message, severity, status, created_by, created_at) "
+            "VALUES (?, ?, 'pending', ?, ?)",
+            (body.message, body.severity, admin["id"], now),
+        )
+        conn.commit()
+        return {"id": cur.lastrowid, "message": body.message, "severity": body.severity,
+                "status": "pending", "created_at": now}
     finally:
         conn.close()
 
@@ -354,8 +374,8 @@ def admin_incidents(admin: dict = Depends(require_admin)):
     conn = get_conn()
     try:
         rows = conn.execute(
-            "SELECT i.id, i.user_id, u.username, i.description, i.address, i.phone, i.status, "
-            "i.created_at, i.updated_at FROM incident_reports i LEFT JOIN users u ON u.id = i.user_id "
+            "SELECT i.id, i.user_id, u.username, i.description, i.address, i.phone, i.lat, i.lon, "
+            "i.status, i.created_at, i.updated_at FROM incident_reports i LEFT JOIN users u ON u.id = i.user_id "
             "ORDER BY i.id DESC"
         ).fetchall()
         return [dict(r) for r in rows]
@@ -403,6 +423,37 @@ def admin_pump_command(body: PumpCommandIn, admin: dict = Depends(require_admin)
                 "status": "pending", "created_at": now}
     finally:
         conn.close()
+
+
+@app.get("/admin/pump-status")
+def admin_pump_status(region: Literal["bangkok_test"], admin: dict = Depends(require_admin)):
+    """อ่านอย่างเดียว ห้ามเขียน DB ตัวเลขใช้กติกาเดียวกับ /device/pump-command และ 409 ของ pump-commands"""
+    conn = get_conn()
+    try:
+        last = _latest_pump_command(conn, region)
+        seen = conn.execute(
+            "SELECT MAX(r.measured_at) AS t FROM readings r JOIN stations s ON s.id = r.station_id "
+            "WHERE s.source = 'esp32'"
+        ).fetchone()
+    finally:
+        conn.close()
+    seconds_left = cooldown_left = 0
+    if last is not None and last["command"] == "on":
+        age = _seconds_since(last["created_at"])
+        if age is not None:  # ไม่มีเวลาสร้าง บอร์ดได้ off และสั่ง on ใหม่ได้ จึงเป็น 0
+            seconds_left = max(0, math.ceil(PUMP_MAX_RUN_S - age))
+            cooldown_left = max(0, math.ceil(PUMP_COOLDOWN_S - age))
+    return {
+        "region": region,
+        "pump": "on" if seconds_left > 0 else "off",
+        "seconds_left": seconds_left,
+        "cooldown_left_s": cooldown_left,
+        "can_send_on": cooldown_left == 0,
+        "acknowledged": last is not None and last["executed_at"] is not None,
+        "last_command": ({k: last[k] for k in ("id", "command", "created_at", "executed_at")}
+                         if last is not None else None),
+        "board_last_seen": seen["t"],
+    }
 
 
 @app.get("/admin/predictions")
