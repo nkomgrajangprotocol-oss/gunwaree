@@ -16,7 +16,7 @@
      crit    at or over crit (Bangkok Drainage Office level); road over 10 cm
      warn    at or over warn; road 5 to 10 cm
      normal  everything below
-     stale   no value, or older than 6 hours */
+     stale   no value, or older than 3 hours (GW.isStale, against the current time) */
 
 (function (GW) {
   'use strict';
@@ -29,7 +29,6 @@
   var KINDS = ['river', 'canal', 'road'];
   var SAMPLE = { river: 'stations-river.json', canal: 'stations-canal.json', road: 'stations-road.json' };
   var REFRESH_MS = 60 * 1000;
-  var FRESH_MS = 6 * 3600 * 1000;
   var LIST_SHORT = 12;
   var ORDER = ['over', 'crit', 'warn', 'normal', 'stale'];
   var TONE = { over: 'red', crit: 'orange', warn: 'yellow', normal: 'green', stale: 'grey' };
@@ -55,16 +54,11 @@
 
   function isMissing(v) { return v === null || v === undefined; }
 
-  function timeValue(s) {
-    var m = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/.exec(s || '');
-    return m ? Date.UTC(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0)) : NaN;
-  }
-
   function valueOf(s) { return s.kind === 'road' ? s.depth_cm : s.water_level; }
 
-  function statusOf(s, newest) {
+  function statusOf(s) {
     var v = valueOf(s);
-    if (isMissing(v) || !(newest - timeValue(s.measured_at) <= FRESH_MS)) return 'stale';
+    if (isMissing(v) || GW.isStale(s.measured_at)) return 'stale';
     if (s.kind === 'road') {
       if (v >= 30) return 'over';
       if (v > 10) return 'crit';
@@ -93,9 +87,8 @@
     var items = [];
     KINDS.forEach(function (k) {
       var list = state.data[k] || [];
-      var newest = Math.max.apply(null, list.map(function (s) { return timeValue(s.measured_at); }).filter(isFinite).concat([-Infinity]));
       list.forEach(function (s) {
-        var st = statusOf(s, newest);
+        var st = statusOf(s);
         items.push({ s: s, id: k + ':' + s.code, kind: k, status: st, rank: ORDER.indexOf(st), margin: margin(s) });
       });
     });
@@ -514,7 +507,7 @@
     else { statusEl.textContent = ''; return; }
     statusEl.setAttribute('data-mode', mode);
     statusEl.textContent = text;
-    if (mode === 'sample') statusEl.title = lang.t('status.sampleHint', { url: GW.BASE_URL }); else statusEl.removeAttribute('title');
+    if (mode === 'sample') statusEl.title = lang.t('status.sampleHint'); else statusEl.removeAttribute('title');
   }
 
   function renderTime() {

@@ -20,10 +20,10 @@
   <!-- Background: bright blue sky with white clouds (Miguel Á. Padriñán, Pexels license),
        seen through wet glass while it rains. js/intro.js renders the glass, the rain and the title with WebGL. -->
   <div class="intro__bg" aria-hidden="true">
-    <video class="intro__video" data-rain-video autoplay muted loop playsinline preload="auto"
+    <!-- 1080p only, attached by js/intro.js unless the screen is narrow or data saver is on (the poster stays) -->
+    <video class="intro__video" data-rain-video autoplay muted loop playsinline preload="metadata"
            poster="assets/img/sky-blue-poster.jpg">
-      <source src="assets/video/sky-blue-1440p.mp4" type="video/mp4" media="(min-width: 1600px)">
-      <source src="assets/video/sky-blue-1080p.mp4" type="video/mp4">
+      <source data-src="assets/video/sky-blue-1080p.mp4" type="video/mp4">
     </video>
     <canvas class="intro__glass" data-glass></canvas>
   </div>
@@ -78,10 +78,11 @@
       </ul>
     </nav>
     <p data-i18n="legal.notice">Hackathon prototype, not an official flood warning. In an emergency call 191 or 1669.</p>
+    <p class="intro__credit" data-i18n="legal.credits">Data: Bangkok Drainage and Sewerage Office via POPNIX Flood, ThaiWater / HII, Open-Meteo (CC BY 4.0), Royal Irrigation Department.</p>
     <p class="intro__credit">Video: Miguel Á. Padriñán, <a href="https://www.pexels.com/video/low-angle-shot-of-sky-with-clouds-moving-6772577/" rel="noopener">Pexels</a></p>
   </footer>
 
-  <script src="js/lang.js"></script>
-  <script src="js/intro.js" defer></script>
+  <script src="js/lang.js?v=20261016e"></script>
+  <script src="js/intro.js?v=20261016e" defer></script>
 </body>
 </html>

@@ -40,7 +40,6 @@
 
   // What the page knows. undefined = still loading.
   var data = { risk: undefined, districts: undefined, river: undefined, canal: undefined, rain: undefined, dams: undefined, alerts: null };
-  var FRESH_HOURS = 6;   // a gauge that has not reported for this long is left out of the canal count
   var errors = {};
   var modes = {};
   var connecting = false;
@@ -119,12 +118,6 @@
     body.appendChild(h('p', 'card__error', L.t('error.card')));
   }
 
-  // Backend time string to a comparable number (both sides are Thai time, so no zone maths)
-  function timeValue(s) {
-    var m = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/.exec(s || '');
-    return m ? Date.UTC(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0)) : NaN;
-  }
-
   function findStation(list, code) {
     for (var i = 0; list && i < list.length; i++) if (String(list[i].code) === code) return list[i];
     return null;
@@ -148,6 +141,17 @@
 
     var r = data.risk;
     var meta = RISK[r.level] || RISK.none;
+
+    // Sample data (the server could not be reached): labelled on the card, never shown as the current level
+    if (modes.risk === 'sample') {
+      card.appendChild(h('p', 'sample-tag', L.t('sample.badge')));
+      var rowS = h('div', 'risk-card__row');
+      rowS.appendChild(h('p', 'risk-card__level risk-card__level--msg lv-grey', L.t('sample.level', { level: levelLabel(r.level) })));
+      card.appendChild(rowS);
+      card.appendChild(h('p', 'risk-card__desc', L.t('sample.notCurrent')));
+      card.appendChild(h('p', 'risk-card__meta', L.t('risk.target')));
+      return;
+    }
 
     var row = h('div', 'risk-card__row');
     // A level from rule B2, not a probability: no percentage is shown (risk_percent is only 0, 33, 67 or 100)
@@ -178,7 +182,7 @@
     var banner = $('[data-banner]');
     var alert = data.alerts && data.alerts.length ? data.alerts[0] : null;
     var r = data.risk;
-    var high = r && (r.level === 'warning' || r.level === 'critical');
+    var high = r && modes.risk !== 'sample' && (r.level === 'warning' || r.level === 'critical');
 
     banner.textContent = '';
     if (!alert && !high) {
@@ -281,6 +285,7 @@
       awaiting(body);
     } else {
       metricValue(body, fmtNum(st.water_level, 2), unit('m'));
+      if (GW.isStale(st.measured_at)) body.appendChild(h('p', 'metric__note stale-tag', GW.staleText(st.measured_at)));
       if (st.bank !== null) {
         var diff = st.bank - st.water_level;
         var key = diff >= 0 ? 'river.below' : 'river.above';
@@ -303,10 +308,9 @@
     body.textContent = '';
     if (!data.canal) { cardError(body); place.textContent = ''; return; }
 
-    // Only gauges with a recent reading and a real bank height count
+    // Only gauges with a reading from the last 3 hours (GW.isStale) and a real bank height count
     var withLevel = data.canal.filter(function (s) { return s.water_level !== null && s.measured_at; });
-    var newest = Math.max.apply(null, withLevel.map(function (s) { return timeValue(s.measured_at); }).concat([-Infinity]));
-    var fresh = withLevel.filter(function (s) { return newest - timeValue(s.measured_at) <= FRESH_HOURS * 3600000; });
+    var fresh = withLevel.filter(function (s) { return !GW.isStale(s.measured_at); });
     place.textContent = L.t('canal.sub', { n: fresh.length });
 
     var banked = fresh.filter(function (s) { return s.bank !== null && s.bank > 0; });
@@ -416,7 +420,7 @@
     else { el.textContent = ''; return; }
     el.setAttribute('data-mode', mode);
     el.textContent = text;
-    if (mode === 'sample') el.title = L.t('status.sampleHint', { url: GW.BASE_URL });
+    if (mode === 'sample') el.title = L.t('status.sampleHint');
     else el.removeAttribute('title');
   }
 
@@ -473,7 +477,8 @@
 
   function loader(key, path, sampleFile, after) {
     return function () {
-      return GW.load(path, sampleFile, { onSlow: onSlow }).then(function (res) {
+      var get = key === 'risk' ? GW.loadRisk({ onSlow: onSlow }) : GW.load(path, sampleFile, { auth: false, onSlow: onSlow });
+      return get.then(function (res) {
         data[key] = res.data;
         modes[key] = res.mode;
         errors[key] = null;
@@ -496,14 +501,15 @@
   }
 
   // While showing sample data, try the backend again every 15 seconds so the page
-  // switches to live data as soon as the server is up (normal refresh times are much longer)
+  // switches to live data as soon as the server is up (normal refresh times are much longer).
+  // Not /risk: it is asked at most once every 5 minutes (GW.loadRisk), so it waits for its own round.
   var retryTimer = 0;
   function scheduleRetry() {
-    var onSample = Object.keys(modes).some(function (k) { return modes[k] === 'sample'; });
+    var onSample = Object.keys(modes).some(function (k) { return k !== 'risk' && modes[k] === 'sample'; });
     if (!onSample || retryTimer) return;
     retryTimer = setTimeout(function () {
       retryTimer = 0;
-      loaders.forEach(function (fn) { fn(); });
+      loaders.forEach(function (fn) { if (fn !== loadRisk) fn(); });
     }, 15000);
   }
 

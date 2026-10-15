@@ -298,6 +298,7 @@ textarea.field__input { min-height: 7rem; resize: vertical; line-height: 1.6; }
 }
 .chart__tip.is-on, .chart__tip--now { opacity: 1; }
 .chart__tip--now.is-hidden { opacity: 0; }
+.chart__tip--now.is-old { background: var(--c-muted, #5B6B70); }
 
 .legend { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-top: var(--s-4); }
 .legend__item { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: var(--fs-12); background: var(--wash); color: var(--c-muted); }

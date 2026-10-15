@@ -442,7 +442,7 @@
     else { statusEl.textContent = ''; return; }
     statusEl.setAttribute('data-mode', mode);
     statusEl.textContent = text;
-    if (mode === 'sample') statusEl.title = lang.t('status.sampleHint', { url: GW.BASE_URL });
+    if (mode === 'sample') statusEl.title = lang.t('status.sampleHint');
     else statusEl.removeAttribute('title');
   }
 

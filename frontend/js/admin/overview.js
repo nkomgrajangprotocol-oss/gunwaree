@@ -74,9 +74,11 @@
     return pts;
   }
 
-  // Change over the last 6 hours: newest good reading against the good reading nearest to 6 hours before it
+  // Change over the last 6 hours: newest good reading against the good reading nearest to 6 hours before it.
+  // No trend from old data: when the newest reading is older than 3 hours (GW.isStale) the answer is 'stale'.
   function change6h(pts) {
     var good = pts.filter(function (p) { return !p.odd; });
+    if (good.length && GW.isStale(good[good.length - 1].at)) return 'stale';
     if (good.length < 2) return null;
     var last = good[good.length - 1];
     var target = last.t - 6 * 3600000;
@@ -116,7 +118,10 @@
     var d = change6h(series());
     var lines = [];
     var tone = null;
-    if (d !== null) {
+    if (a.st && GW.isStale(a.st.measured_at)) lines.push(A.text('span', 'lv-orange', GW.staleText(a.st.measured_at)));
+    if (d === 'stale') {
+      lines.push(L.t('stale.noTrend'));
+    } else if (d !== null) {
       var sign = d > 0.005 ? '+' : d < -0.005 ? '−' : '±';
       lines.push(L.t('ad.ov.change', { d: sign + A.num(Math.abs(d), 2) }));
       tone = d > 0.005 ? 'orange' : null;
@@ -280,10 +285,13 @@
       if (p.odd) s.appendChild(svg('circle', { cx: x(p.t), cy: y(p.v), r: 3.5, class: 'chart__odd' }));
     });
 
-    // Now: the newest reading, marked and labelled
+    // Now: the newest reading, marked and labelled. An old one (over 3 hours) is not "now": no pulse, no now line
+    var old = GW.isStale(last.at);
     var nx = x(last.t), ny = y(last.v);
-    s.appendChild(svg('line', { x1: nx, x2: nx, y1: P.t, y2: H - P.b, class: 'chart__now' }));
-    s.appendChild(svg('circle', { cx: nx, cy: ny, r: 9, class: 'chart__pulse' }));
+    if (!old) {
+      s.appendChild(svg('line', { x1: nx, x2: nx, y1: P.t, y2: H - P.b, class: 'chart__now' }));
+      s.appendChild(svg('circle', { cx: nx, cy: ny, r: 9, class: 'chart__pulse' }));
+    }
     s.appendChild(svg('circle', { cx: nx, cy: ny, r: 4.5, class: 'chart__dot' }));
 
     // Hover: a crosshair and the reading under the pointer
@@ -296,7 +304,8 @@
 
     chartBox.appendChild(s);
     var tip = h('p', 'chart__tip');
-    var nowTip = h('p', 'chart__tip chart__tip--now', A.clock(last.at) + ' · ' + A.num(last.v, 2) + ' ' + m());
+    var nowTip = h('p', 'chart__tip chart__tip--now' + (old ? ' is-old' : ''),
+      (old ? GW.staleText(last.at, 'stale.latest') : A.clock(last.at)) + ' · ' + A.num(last.v, 2) + ' ' + m());
     chartBox.appendChild(nowTip);
     chartBox.appendChild(tip);
     nowTip.style.left = Math.min(W - 70, Math.max(70, nx)) + 'px';
@@ -484,15 +493,21 @@
 
   /* ---------- Loading ---------- */
 
+  // /risk goes through GW.loadRisk: at most once every 5 minutes across pages. Sample data is not the current level.
   function load(key, path, opts) {
-    return A.api(path, opts).then(function (d) {
+    var get = key === 'risk' ? GW.loadRisk().then(function (res) {
+      if (res.mode === 'sample') throw res;
+      return res.data;
+    }) : A.api(path, opts);
+    return get.then(function (d) {
       data[key] = d;
       errors[key] = null;
     }, function (err) {
       if (key === 'risk' && err.status === 503) { data.risk = null; errors.risk = null; return; }
       if (key === 'history' && err.kind === 'http' && err.status === 404) { data.history = null; errors.history = null; return; }
       errors[key] = err;
-      if (data[key] === undefined) data[key] = null;
+      // A failed /risk (or sample data) shows as an error, not as "no data to assess" (null = the backend's 503)
+      if (data[key] === undefined && key !== 'risk') data[key] = null;
     });
   }
 

@@ -25,8 +25,7 @@
   var MARGIN = 0.30;              // B2_MARGIN_M in backend/risk.py
   var RISK_MS = 5 * 60 * 1000;
   var RIVER_MS = 60 * 1000;
-  var RETRY_MS = 15 * 1000;       // while on sample data, try the backend again this often
-  var STALE_HOURS = 6;
+  var RETRY_MS = 15 * 1000;       // while the river is on sample data, try the backend again this often (not /risk)
 
   var ORDER = ['none', 'watch', 'warning', 'critical'];
   var TONE = { none: 'green', watch: 'yellow', warning: 'orange', critical: 'red' };
@@ -85,11 +84,11 @@
     return m ? Date.UTC(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0)) : NaN;
   }
   function wallString(ms) { return new Date(ms).toISOString().slice(0, 16).replace('T', ' '); }
-  function nowThai() { return Date.now() + 7 * 3600000; }
 
+  // Sample data (server unreachable) is never shown as the current level
   function currentLevel() {
     var r = data.risk;
-    return r && TONE[r.level] ? r.level : null;
+    return r && modes.risk !== 'sample' && TONE[r.level] ? r.level : null;
   }
 
   function findStation(code) {
@@ -105,10 +104,8 @@
     return { st: st, wl: st && isNum(st.water_level) ? st.water_level : null, bank: bank, watch: bank - MARGIN };
   }
 
-  function isStale(s) {
-    var t = wallValue(s);
-    return !isFinite(t) || nowThai() - t > STALE_HOURS * 3600000;
-  }
+  // Older than 3 hours, against the current time: the same check everywhere (js/api.js)
+  function isStale(s) { return GW.isStale(s); }
 
   function onSample() {
     return Object.keys(modes).some(function (k) { return modes[k] === 'sample'; });
@@ -137,20 +134,30 @@
       seg.classList.toggle('is-on', seg.getAttribute('data-seg') === level);
     });
 
+    var sample = !!r && modes.risk === 'sample';
     var lv = $('[data-rlevel]');
-    lv.textContent = loading ? L.t('rp.loading') : level ? F.levelLabel(level) : (r === null ? L.t('risk.nodata') : L.t('error.card'));
+    lv.textContent = loading ? L.t('rp.loading') : level ? F.levelLabel(level) :
+      sample ? L.t('sample.level', { level: F.levelLabel(r.level) }) : (r === null ? L.t('risk.nodata') : L.t('error.card'));
+    var tag = $('[data-rsample]');
+    if (!tag) {
+      tag = h('p', 'sample-tag', '');
+      tag.setAttribute('data-rsample', '');
+      lv.parentNode.insertBefore(tag, lv);
+    }
+    tag.textContent = L.t('sample.badge');
+    tag.hidden = !sample;
     lv.classList.toggle('is-msg', !level);
     if (!loading && level !== shownLevel) {
       F.replay(lv, 'is-flip', 900);
       F.replay(stage, 'is-shock', 1200);
       shownLevel = level;
     }
-    $('[data-rdesc]').textContent = level ? L.t('risk.desc.' + level) : (r === null ? L.t('rp.whyNoData') : '');
+    $('[data-rdesc]').textContent = level ? L.t('risk.desc.' + level) : sample ? L.t('sample.notCurrent') : (r === null ? L.t('rp.whyNoData') : '');
 
     var dl = $('[data-rfacts]');
     dl.textContent = '';
     fact(dl, L.t('rp.f.where'), L.t('risk.target'));
-    if (r) {
+    if (r && !sample) {
       var until = wallValue(r.created_at) + (r.horizon_hours || 24) * 3600000;
       if (isFinite(until)) fact(dl, L.t('rp.f.until'), F.time(wallString(until)));
       fact(dl, L.t('rp.f.ran'), F.time(r.created_at) || '–');
@@ -165,7 +172,7 @@
     var el = $('[data-next]');
     if (!el) return;
     if (!last.risk || busy.risk) { el.textContent = L.t('rp.loading'); return; }
-    var left = Math.max(0, last.risk + (modes.risk === 'sample' ? RETRY_MS : RISK_MS) - Date.now());
+    var left = Math.max(0, last.risk + RISK_MS - Date.now());
     var m = Math.floor(left / 60000);
     var s = Math.floor((left % 60000) / 1000);
     el.textContent = L.t('rp.in', { t: m + ':' + (s < 10 ? '0' : '') + s });
@@ -322,7 +329,9 @@
 
     dio.tags.bank.textContent = L.t('rp.d.bank', { v: F.num(a.bank, 2) });
     dio.tags.watch.textContent = L.t('rp.d.watch', { v: F.num(a.watch, 2) });
-    dio.tags.now.textContent = a.wl === null ? L.t('rp.d.none') : L.t('rp.d.now', { v: F.num(a.wl, 2) });
+    dio.tags.now.textContent = a.wl === null ? L.t('rp.d.none') : isStale(a.st.measured_at)
+      ? GW.staleText(a.st.measured_at, 'stale.latest') + ' · ' + F.num(a.wl, 2) + (L.get() === 'th' ? ' ม.' : ' m')
+      : L.t('rp.d.now', { v: F.num(a.wl, 2) });
     place(dio.tags.bank, DW - 34, g.bank - 15, DD / 2);
     place(dio.tags.watch, 46, g.watch - 15, DD / 2);
     place(dio.tags.now, DW / 2, (g.water === null ? BED : g.water) + 20, DD / 2 + 6);
@@ -525,7 +534,7 @@
           li.appendChild(row);
         }
         var stale = isStale(st.measured_at);
-        li.appendChild(h('p', 'rstop__time card__time', F.updated(st.measured_at) + (stale ? '. ' + L.t('rp.stale') : '')));
+        li.appendChild(h('p', 'rstop__time card__time' + (stale ? ' stale-tag' : ''), stale ? GW.staleText(st.measured_at) : F.updated(st.measured_at)));
         if (stale) li.classList.add('is-stale');
       }
       ol.appendChild(li);
@@ -666,7 +675,7 @@
     else { el.textContent = ''; return; }
     el.setAttribute('data-mode', mode);
     el.textContent = text;
-    if (mode === 'sample') el.title = L.t('status.sampleHint', { url: GW.BASE_URL }); else el.removeAttribute('title');
+    if (mode === 'sample') el.title = L.t('status.sampleHint'); else el.removeAttribute('title');
   }
 
   function renderAll() {
@@ -689,12 +698,15 @@
   function loadRisk() {
     busy.risk = true;
     tick();
-    return GW.load('/risk', 'risk.json', { auth: false, onSlow: onSlow }).then(function (res) {
+    var at = Date.now();
+    return GW.loadRisk({ onSlow: onSlow }).then(function (res) {
+      at = res.at;
       data.risk = res.data;
       modes.risk = res.mode;
       errors.risk = null;
       if (res.mode === 'live') GW.pulse();
     }, function (err) {
+      if (err.at) at = err.at;
       if (err.status === 503) {
         data.risk = null;          // the backend answered: no recent reading to assess
         modes.risk = 'live';
@@ -704,7 +716,7 @@
       }
     }).then(function () {
       busy.risk = false;
-      last.risk = Date.now();
+      last.risk = at;   // when the answer was fetched, maybe on another page: the next one is 5 minutes after it
       renderAll();
     });
   }
@@ -741,8 +753,9 @@
   }
 
   // One clock: the countdown every second, and each endpoint again once it is due (only while the tab is visible)
+  // /risk keeps its 5-minute round even on sample data (GW.loadRisk); the river retries sooner
   function due(key, ms) {
-    return !busy[key] && Date.now() - last[key] >= (onSample() ? Math.min(ms, RETRY_MS) : ms);
+    return !busy[key] && Date.now() - last[key] >= (key !== 'risk' && onSample() ? Math.min(ms, RETRY_MS) : ms);
   }
   setInterval(function () {
     tick();

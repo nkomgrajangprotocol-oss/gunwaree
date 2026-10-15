@@ -70,7 +70,13 @@
     'status.sample': { en: 'Sample data, server unavailable', th: 'ข้อมูลตัวอย่าง เชื่อมต่อเซิร์ฟเวอร์ไม่ได้' },
     'status.updated': { en: 'Updated {time}', th: 'อัปเดต {time}' },
     'status.awaiting': { en: 'Awaiting report', th: 'รอการรายงาน' },
-    'status.sampleHint': { en: 'Could not reach the GunWaree server at {url}. Retrying every 15 seconds.', th: 'เชื่อมต่อเซิร์ฟเวอร์ GunWaree ที่ {url} ไม่ได้ กำลังลองใหม่ทุก 15 วินาที' },
+    'status.sampleHint': { en: 'Cannot connect to the server. Retrying.', th: 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กำลังลองใหม่' },
+    'stale.label': { en: 'Last reading at {time} (not updating)', th: 'ข้อมูลล่าสุดเมื่อ {time} (ไม่อัปเดต)' },
+    'stale.latest': { en: 'Latest {time}', th: 'ล่าสุด {time}' },
+    'stale.noTrend': { en: 'No trend yet: the data is not updating', th: 'ยังไม่มีแนวโน้ม ข้อมูลไม่อัปเดต' },
+    'sample.badge': { en: 'Sample data', th: 'ข้อมูลตัวอย่าง' },
+    'sample.level': { en: 'Sample: {level}', th: 'ตัวอย่าง: {level}' },
+    'sample.notCurrent': { en: 'This is sample data, not the current level. The server cannot be reached.', th: 'นี่คือข้อมูลตัวอย่าง ไม่ใช่ระดับปัจจุบัน เชื่อมต่อเซิร์ฟเวอร์ไม่ได้' },
 
     // Home
     'home.title': { en: 'Flood overview', th: 'ภาพรวมน้ำท่วม' },
@@ -351,7 +357,7 @@
     'water.depth': { en: 'Flood depth on the road', th: 'ความลึกน้ำท่วมถนน' },
     'water.district': { en: 'District', th: 'เขต' },
     'water.code': { en: 'Station code', th: 'รหัสสถานี' },
-    'water.stale': { en: 'No report for over 6 hours, so this reading may be out of date.', th: 'ไม่มีรายงานเกิน 6 ชั่วโมง ค่านี้อาจไม่เป็นปัจจุบัน' },
+    'water.stale': { en: 'No report for over 3 hours, so this reading may be out of date.', th: 'ไม่มีรายงานเกิน 3 ชั่วโมง ค่านี้อาจไม่เป็นปัจจุบัน' },
     'water.list': { en: 'Stations', th: 'สถานีวัด' },
     'water.listSub': { en: 'Most urgent first', th: 'เรียงจากที่ต้องติดตามมากที่สุด' },
     'water.showAll': { en: 'Show all {n}', th: 'แสดงทั้งหมด {n} แห่ง' },
@@ -446,7 +452,7 @@
       en: 'The rule used the reading from {time}. The one shown here was taken at another time, or was set aside as an odd jump.',
       th: 'กฎใช้ค่าเมื่อ {time} ค่าที่แสดงนี้วัดคนละเวลา หรือถูกกันออกเพราะกระโดดผิดปกติ'
     },
-    'rp.stale': { en: 'No report for over 6 hours', th: 'ไม่มีรายงานเกิน 6 ชั่วโมง' },
+    'rp.stale': { en: 'No report for over 3 hours', th: 'ไม่มีรายงานเกิน 3 ชั่วโมง' },
 
     'rp.alongTitle': { en: 'Along the Chao Phraya', th: 'ตลอดแม่น้ำเจ้าพระยา' },
     'rp.alongSub': { en: 'North to south. Context only: the rule uses Ayutthaya alone.', th: 'เรียงจากเหนือลงใต้ ใช้ประกอบเท่านั้น กฎใช้เฉพาะอยุธยา' },

@@ -1,6 +1,6 @@
 /* GunWaree app background: the bright blue-sky video with falling rain drawn on a 2D canvas.
    Light by design (a few hundred lines per frame); paused when the tab is hidden.
-   Reduced motion: the video is hidden (the poster stays) and a single still frame of rain is drawn. */
+   Phones and data saver: no video, the poster only. Reduced motion: the video is hidden (the poster stays) and a single still frame of rain is drawn. */
 
 (function () {
   'use strict';
@@ -8,6 +8,19 @@
   var video = document.querySelector('[data-sky-video]');
   var canvas = document.querySelector('[data-sky-rain]');
   if (!canvas) return;
+
+  // The video loads only on screens wider than 640px without data saver (the same rule as js/intro.js).
+  // Otherwise it stays a still poster and the page works the same.
+  var conn = navigator.connection;
+  if (video) {
+    var source = video.querySelector('source[data-src]');
+    if (!window.matchMedia('(max-width: 640px)').matches && !(conn && conn.saveData) && source) {
+      source.src = source.getAttribute('data-src');
+      video.load();
+    } else {
+      video = null;
+    }
+  }
 
   var ctx = canvas.getContext('2d');
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');

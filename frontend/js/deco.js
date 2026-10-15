@@ -11,6 +11,14 @@
 
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
 
+  // Phones, narrow screens, slow machines and data saver: the heavy parts stay off (the full-screen splash
+  // canvas, rising bubbles, tap ripples). Everything else is CSS and stays.
+  var conn = navigator.connection;
+  var lite = window.matchMedia('(pointer: coarse)').matches ||
+    window.matchMedia('(max-width: 900px)').matches ||
+    (navigator.hardwareConcurrency > 0 && navigator.hardwareConcurrency <= 4) ||
+    !!(conn && conn.saveData);
+
   function rand(a, b) { return a + Math.random() * (b - a); }
   function pick(list) { return list[Math.floor(Math.random() * list.length)]; }
 
@@ -110,7 +118,7 @@
     sb.appendChild(glass);
     var sbSea = sea('sea--deep');
     sbSea.appendChild(el('caustics'));
-    bubbles(sbSea, 9);
+    if (!lite) bubbles(sbSea, 9);
     sb.appendChild(sbSea);
     sb.appendChild(el('sheen', { '--t': '13s', '--delay': '3s' }));
     sidebar.insertBefore(sb, sidebar.firstChild);
@@ -168,7 +176,7 @@
   var running = false, raf = 0, last = 0, budget = 0;
   var LEDGES = '.card, .hero, .panel, .box, .page-head, .topbar, .app-footer';
 
-  if (sky) {
+  if (sky && !lite) {
     canvas = document.createElement('canvas');
     canvas.className = 'sky__splash';
     canvas.setAttribute('aria-hidden', 'true');
@@ -289,7 +297,7 @@
 
   /* ---------- A ripple where people tap ---------- */
 
-  document.addEventListener('pointerdown', function (e) {
+  if (!lite) document.addEventListener('pointerdown', function (e) {
     if (reduce.matches || e.button > 0) return;
     if (e.target.closest && e.target.closest('input, textarea, select, [contenteditable]')) return;
     [0, 1].forEach(function (i) {
@@ -312,9 +320,17 @@
   nextFlash();
 
   window.addEventListener('resize', size);
-  window.addEventListener('scroll', measure, { passive: true });
-  // Cards appear and grow as data arrives; check their positions again every so often
-  setInterval(function () { if (running) measure(); }, 1500);
+  if (canvas) {
+    window.addEventListener('scroll', measure, { passive: true });
+    // Cards appear and grow as data arrives: measure again when the page content changes size,
+    // or (without ResizeObserver) every 5 seconds while the tab is visible
+    var content = document.querySelector('.content');
+    if (window.ResizeObserver && content) {
+      new ResizeObserver(function () { if (running) measure(); }).observe(content);
+    } else {
+      setInterval(function () { if (running && !document.hidden) measure(); }, 5000);
+    }
+  }
   document.addEventListener('visibilitychange', function () { if (document.hidden) stop(); else start(); });
   function applyMotion() { if (reduce.matches) stop(); else start(); }
   if (reduce.addEventListener) reduce.addEventListener('change', applyMotion);

@@ -274,10 +274,11 @@
     state.composing = true;
     renderList();
     renderReview(true);
-    // The current level, to suggest wording (at most once every 5 minutes: each call stores a prediction)
+    // The current level, to suggest wording (at most once every 5 minutes across pages: GW.loadRisk;
+    // each call stores a prediction). Sample data is not the current level, so it suggests nothing.
     if (Date.now() - state.riskAt > 5 * 60 * 1000) {
       state.riskAt = Date.now();
-      A.api('/risk').then(function (r) { state.risk = r; }, function (err) {
+      GW.loadRisk().then(function (res) { state.risk = res.mode === 'sample' ? undefined : res.data; }, function (err) {
         state.risk = err.status === 503 ? null : undefined;
       }).then(function () { if (state.composing) renderSuggest(); });
     }

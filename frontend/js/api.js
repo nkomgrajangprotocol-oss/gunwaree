@@ -114,11 +114,17 @@
     GW.request('/auth/login', { method: 'POST', body: {...}, onSlow: fn })
     Resolves with the parsed JSON body. Rejects with an ApiError.
   */
+  // Public data: a GET of these never carries the sign-in token
+  var PUBLIC_GET = /^\/(stations\/latest|stations\/history|districts\/latest|dams\/latest|risk|alerts)(\?|$)/;
+
   GW.request = function (path, opts) {
     opts = opts || {};
-    var headers = { 'Content-Type': 'application/json' };
+    var method = (opts.method || 'GET').toUpperCase();
+    // Content-Type only goes with a body (POST, PATCH)
+    var headers = opts.body === undefined ? {} : { 'Content-Type': 'application/json' };
     var session = GW.session.get();
-    var sentToken = !!(session && opts.auth !== false);
+    var isPublic = method === 'GET' && PUBLIC_GET.test(path);
+    var sentToken = !!(session && opts.auth !== false && !isPublic);
     if (sentToken) headers.Authorization = 'Bearer ' + session.token;
 
     var controller = new AbortController();
@@ -131,7 +137,7 @@
     }
 
     return fetch(GW.BASE_URL + path, {
-      method: opts.method || 'GET',
+      method: method,
       headers: headers,
       body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
       signal: controller.signal
@@ -173,6 +179,81 @@
         })
         .then(function (data) { return { data: data, mode: 'sample' }; }, function () { throw err; });
     });
+  };
+
+  /* ---------- Rule-based risk level: GET /risk at most once every 5 minutes across pages ----------
+     Each call stores a prediction row on the server, so the latest answer (or failure) and its time are kept in
+     sessionStorage and reused for 5 minutes, also after moving to another page. Only the /risk answer is kept.
+    GW.loadRisk({ onSlow }) resolves { data, mode: 'live' | 'sample', at } like GW.load, and rejects with an
+    ApiError (503 = no recent reading to assess). `at` is when the answer was fetched (Date.now() time). */
+
+  GW.RISK_MS = 5 * 60 * 1000;
+  var RISK_KEY = 'gw_risk';
+  var riskPending = null;
+
+  function readRisk() {
+    var st = store('sessionStorage');
+    try {
+      var c = st && JSON.parse(st.getItem(RISK_KEY));
+      var age = c ? Date.now() - c.at : Infinity;
+      return age >= 0 && age < GW.RISK_MS ? c : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function settleRisk(c) {
+    if (c.err) {
+      var err = new ApiError(c.err.status, c.err.kind, c.err.detail);
+      err.at = c.at;
+      return Promise.reject(err);
+    }
+    return Promise.resolve({ data: c.data, mode: c.mode, at: c.at });
+  }
+
+  GW.loadRisk = function (opts) {
+    var cached = readRisk();
+    if (cached) return settleRisk(cached);
+    if (!riskPending) {
+      riskPending = GW.load('/risk', 'risk.json', { auth: false, onSlow: opts && opts.onSlow }).then(function (res) {
+        return { at: Date.now(), mode: res.mode, data: res.data };
+      }, function (err) {
+        return { at: Date.now(), err: { status: err.status, kind: err.kind, detail: err.detail } };
+      }).then(function (c) {
+        riskPending = null;
+        var st = store('sessionStorage');
+        try { if (st) st.setItem(RISK_KEY, JSON.stringify(c)); } catch (e) { /* storage blocked: this page still waits 5 minutes */ }
+        return c;
+      });
+    }
+    return riskPending.then(settleRisk);
+  };
+
+  /* ---------- Old readings ----------
+     Backend times are Thai wall-clock time ("YYYY-MM-DD HH:MM[:SS]"), read with the same pattern as
+     js/admin/core.js (no time-zone shift) and compared with the current Thai time.
+     A reading older than 3 hours is not current: the backend does not use one for /risk either. */
+
+  GW.STALE_MS = 3 * 3600000;
+
+  GW.wallValue = function (s) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/.exec(s || '');
+    return m ? Date.UTC(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0), +(m[6] || 0)) : NaN;
+  };
+
+  GW.nowThai = function () { return Date.now() + 7 * 3600000; };
+
+  GW.isStale = function (measuredAt) {
+    var t = GW.wallValue(measuredAt);
+    return !isFinite(t) || GW.nowThai() - t > GW.STALE_MS;
+  };
+
+  // "Last reading at 23:10 (not updating)"
+  GW.staleText = function (measuredAt, key) {
+    var t = GW.wallValue(measuredAt);
+    var clock = isFinite(t) ? new Intl.DateTimeFormat(GW.lang.get() === 'th' ? 'th-TH' : 'en-GB',
+      { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'UTC' }).format(new Date(t)) : '–';
+    return GW.lang.t(key || 'stale.label', { time: clock });
   };
 
   /* Bilingual message for an ApiError. `overrides` maps a status code to a message for this screen. */

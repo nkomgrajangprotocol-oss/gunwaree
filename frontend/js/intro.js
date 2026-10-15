@@ -20,6 +20,16 @@
   var enter = document.querySelector('[data-enter]');
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
+  // The sky video loads only on wider screens without data saver; otherwise the poster stays and the page works the same
+  var conn = navigator.connection;
+  if (!window.matchMedia('(max-width: 640px)').matches && !(conn && conn.saveData)) {
+    var videoSource = video.querySelector('source[data-src]');
+    if (videoSource) {
+      videoSource.src = videoSource.getAttribute('data-src');
+      video.load();
+    }
+  }
+
   var WORD = 'GunWaree';
   var WARP_MS = 1700;
   var warp = { active: false, start: 0, value: 0 };

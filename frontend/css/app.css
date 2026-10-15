@@ -2874,3 +2874,20 @@ fieldset.field legend { padding: 0; margin-bottom: var(--s-1); }
   .rdial__needle, .rdial__seg, .dio__cam, .dio__slice, .dio__water, .dio__surface, .dio__plane, .dio__tag,
   .rstep, .rmeter__water, .rstop__fill, .rbar__fill, .rbar__val, .rlim, .rlim__mark { transition: none !important; }
 }
+
+/* ---------- Old readings and sample data ----------
+   A reading older than 3 hours (GW.isStale) is labelled where it is shown; sample data is labelled on its card. */
+
+.stale-tag { color: var(--lv-orange); font-weight: 600; }
+.sample-tag {
+  display: inline-block;
+  margin-bottom: var(--s-2);
+  padding: 0 var(--s-2);
+  border: 1px solid currentColor;
+  border-radius: var(--r-sm);
+  color: var(--lv-orange);
+  font-size: var(--fs-12);
+  font-weight: 600;
+  line-height: 1.7;
+}
+.sample-tag[hidden] { display: none; }
