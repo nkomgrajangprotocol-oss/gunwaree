@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from typing import Literal, Optional
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 import fetch_latest
@@ -140,6 +140,44 @@ def stations_latest(
         return latest_station_readings(conn, [_water_source(conn)], kind)
     finally:
         conn.close()
+
+
+HISTORY_MAX_ROWS = 2000
+
+
+@app.get("/stations/history")
+def stations_history(
+    kind: Literal["river", "canal"],
+    code: str = Query(min_length=1, max_length=32),
+    hours: int = Query(24, ge=1, le=168),
+):
+    """ค่าย้อนหลังของสถานีเดียว เรียงเก่าไปใหม่ ค่าดิบไม่กรองจุดกระโดด อ่านอย่างเดียว
+    ไม่พบสถานีหรือไม่มีแถวในช่วง ตอบ 200 {"bank": null, "readings": []} (หน้าเว็บถือ 404 ว่ายังไม่ deploy)"""
+    since = (datetime.now(TH_TZ) - timedelta(hours=hours)).strftime("%Y-%m-%d %H:%M:%S")
+    conn = get_conn()
+    try:
+        # แหล่งข้อมูลตามกติกาเดียวกับ /stations/latest ถ้าใช้ POPNIX แต่ไม่มีรหัสนี้ ลองสถานี sim (ไม่รวม esp32)
+        sources = ["popnix", "sim"] if _water_source(conn) == "popnix" else ["sim"]
+        station = None
+        for source in sources:
+            station = conn.execute(
+                "SELECT id, bank FROM stations WHERE source = ? AND kind = ? AND code = ?",
+                (source, kind, code),
+            ).fetchone()
+            if station:
+                break
+        if station is None:
+            return {"bank": None, "readings": []}
+        rows = conn.execute(
+            "SELECT measured_at, water_level FROM readings "
+            "WHERE station_id = ? AND measured_at >= ? AND water_level IS NOT NULL "
+            "ORDER BY measured_at DESC LIMIT ?",
+            (station["id"], since, HISTORY_MAX_ROWS),
+        ).fetchall()
+    finally:
+        conn.close()
+    readings = [{"measured_at": r["measured_at"], "water_level": r["water_level"]} for r in reversed(rows)]
+    return {"bank": station["bank"] if readings else None, "readings": readings}
 
 
 @app.get("/districts/latest")
