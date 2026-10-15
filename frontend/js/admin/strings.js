@@ -45,7 +45,7 @@
     'ad.ov.rainNone': { en: 'No rain gauge has reported yet.', th: 'ยังไม่มีสถานีวัดฝนรายงาน' },
     'ad.ov.damsNote': { en: 'The 4 upstream reservoirs, outside Bangkok', th: 'อ่างเก็บน้ำต้นน้ำ 4 แห่ง (นอกกรุงเทพฯ)' },
     'ad.ov.daily': { en: 'Daily data as of {date}', th: 'ข้อมูลรายวัน ณ {date}' },
-    'ad.ov.risk': { en: 'Risk prediction', th: 'แนวโน้มความเสี่ยง' },
+    'ad.ov.risk': { en: 'Rule-based risk level', th: 'ระดับความเสี่ยงตามกฎ' },
     'ad.ov.riskSub': { en: 'Ayutthaya (station 39) river level, last 24 hours', th: 'ระดับน้ำแม่น้ำที่อยุธยา (สถานี 39) 24 ชั่วโมงที่ผ่านมา' },
     'ad.ov.riskAt': { en: 'Rule B2 at {time}:', th: 'กฎ B2 เมื่อ {time}:' },
     'ad.ov.noForecast': {
@@ -64,8 +64,8 @@
       th: 'ระดับน้ำที่อยุธยาตั้งแต่ {from} ถึง {to} ล่าสุด {v} ม. ตลิ่ง {bank} ม.'
     },
     'ad.ov.noHistory': {
-      en: 'The server does not offer the reading history yet. Deploy the backend with GET /stations/history to see the last 24 hours here.',
-      th: 'เซิร์ฟเวอร์ยังไม่มีข้อมูลย้อนหลัง ต้อง deploy backend ที่มี GET /stations/history ก่อน จึงจะเห็นกราฟ 24 ชั่วโมง'
+      en: 'The 24-hour history is not available right now. The latest reading is shown above.',
+      th: 'ขณะนี้ยังแสดงข้อมูลย้อนหลัง 24 ชั่วโมงไม่ได้ ค่าล่าสุดแสดงอยู่ด้านบน'
     },
     'ad.ov.historyEmpty': { en: 'No readings from Ayutthaya in the last 24 hours.', th: 'ไม่มีค่าจากอยุธยาใน 24 ชั่วโมงที่ผ่านมา' },
     'ad.ov.areas': { en: 'Affected areas', th: 'พื้นที่ได้รับผลกระทบ' },

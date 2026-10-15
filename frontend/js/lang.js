@@ -37,7 +37,7 @@
     // App shell
     'nav.label': { en: 'Main menu', th: 'เมนูหลัก' },
     'nav.home': { en: 'Home', th: 'หน้าแรก' },
-    'nav.risk': { en: 'Risk prediction', th: 'พยากรณ์ความเสี่ยง' },
+    'nav.risk': { en: 'Rule-based risk level', th: 'ระดับความเสี่ยงตามกฎ' },
     'nav.reports': { en: 'Rescue reports', th: 'แจ้งเหตุและติดตาม' },
     'nav.dams': { en: 'Dam levels', th: 'ระดับน้ำในเขื่อน' },
     'nav.soon': { en: 'Soon', th: 'เร็วๆ นี้' },
@@ -79,7 +79,7 @@
     'hero.basin': { en: 'Bangkok and the Chao Phraya River basin', th: 'กรุงเทพฯ และลุ่มน้ำเจ้าพระยา' },
     'hero.note': { en: 'A clearer view of the water around you.', th: 'ติดตามสถานการณ์น้ำรอบตัวคุณ' },
 
-    'risk.label': { en: 'Risk level from a simple rule', th: 'ระดับความเสี่ยงจากกฎง่ายๆ' },
+    'risk.label': { en: 'Rule-based risk level', th: 'ระดับความเสี่ยงตามกฎ' },
     'risk.how': { en: 'Worked out from the river level at Ayutthaya and its 6-hour trend. Not an AI model.', th: 'คำนวณจากระดับน้ำที่อยุธยาและแนวโน้ม 6 ชั่วโมง ไม่ใช่โมเดล AI' },
     'risk.target': { en: 'Ayutthaya (station 39), next 24 hours', th: 'พระนครศรีอยุธยา (สถานี 39) ภายใน 24 ชั่วโมง' },
     'risk.reading': { en: 'Water {wl} m, bank {bank} m', th: 'ระดับน้ำ {wl} ม. ตลิ่ง {bank} ม.' },
@@ -371,7 +371,7 @@
     'water.cm': { en: '{d} cm', th: '{d} ซม.' },
 
     // Risk prediction (rule B2 in backend/risk.py)
-    'rp.title': { en: 'Risk prediction', th: 'พยากรณ์ความเสี่ยง' },
+    'rp.title': { en: 'Rule-based risk level', th: 'ระดับความเสี่ยงตามกฎ' },
     'rp.sub': {
       en: 'Will the Chao Phraya at Ayutthaya reach its bank within the next 24 hours?',
       th: 'แม่น้ำเจ้าพระยาที่อยุธยาจะถึงตลิ่งภายใน 24 ชั่วโมงข้างหน้าหรือไม่'
@@ -478,17 +478,17 @@
       th: 'อยุธยามีน้ำถึงตลิ่งเพียง 5 เหตุการณ์ในปี 2020 ถึง 2025 ตัวเลขนี้จึงเป็นตัวอย่าง ไม่ใช่คะแนนความแม่นยำ ปี 2021 และ 2022 ใช้เลือกค่า 0.30 ม. จึงดูดีกว่าข้อมูลใหม่ ส่วนปี 2025 ตรวจครั้งเดียวและไม่ได้ปรับอะไรตามผล การค้นย้อนหลังได้ไม่เกิน 72 ชั่วโมง ค่าที่ใกล้ 72 จึงถูกตัดที่ขอบ ในปี 2025 กฎยังให้ระดับเตือนภัยขึ้นไป 9 วันที่น้ำไม่ถึงตลิ่งภายใน 24 ชั่วโมงถัดมา'
     },
 
-    'rp.logTitle': { en: 'Recent predictions', th: 'ผลประเมินล่าสุด' },
+    'rp.logTitle': { en: 'Recent risk checks', th: 'ผลประเมินล่าสุด' },
     'rp.logSub': { en: 'Admins only. The server stores one row each time the risk is checked.', th: 'เฉพาะผู้ดูแลระบบ เซิร์ฟเวอร์บันทึกหนึ่งแถวทุกครั้งที่ประเมินความเสี่ยง' },
-    'rp.logEmpty': { en: 'No predictions stored yet.', th: 'ยังไม่มีผลประเมินที่บันทึกไว้' },
-    'rp.logError': { en: 'The prediction log could not be loaded.', th: 'โหลดบันทึกผลประเมินไม่ได้' },
+    'rp.logEmpty': { en: 'No risk checks stored yet.', th: 'ยังไม่มีผลประเมินที่บันทึกไว้' },
+    'rp.logError': { en: 'The risk check log could not be loaded.', th: 'โหลดบันทึกผลประเมินไม่ได้' },
     'rp.logRange': { en: 'Last {n}, from {from} to {to}', th: '{n} รายการล่าสุด ตั้งแต่ {from} ถึง {to}' },
     'rp.logOutcome': { en: '{n} with a recorded outcome', th: 'มีผลจริงบันทึกแล้ว {n} รายการ' },
 
     'rp.limTitle': { en: 'What this is, and what it is not', th: 'ระบบนี้คืออะไร และไม่ใช่อะไร' },
     'rp.l1t': { en: 'A rule, not an AI model', th: 'เป็นกฎ ไม่ใช่โมเดล AI' },
     'rp.l1': {
-      en: 'We tested three machine-learning models, but Ayutthaya had only 5 real floods from 2020 to 2025, too few to show that any of them beats this rule. Every prediction is stored, so a model can be checked against real outcomes later.',
+      en: 'We tested three machine-learning models, but Ayutthaya had only 5 real floods from 2020 to 2025, too few to show that any of them beats this rule. Every risk check is stored, so a model can be checked against real outcomes later.',
       th: 'เราทดสอบโมเดล machine learning 3 แบบ แต่อยุธยามีน้ำท่วมจริงเพียง 5 ครั้งในปี 2020 ถึง 2025 น้อยเกินกว่าจะพิสูจน์ว่าโมเดลใดดีกว่ากฎนี้ ระบบบันทึกผลประเมินทุกครั้งไว้เทียบกับผลจริงภายหลัง'
     },
     'rp.l2t': { en: 'A level, not a probability', th: 'เป็นระดับ ไม่ใช่ความน่าจะเป็น' },

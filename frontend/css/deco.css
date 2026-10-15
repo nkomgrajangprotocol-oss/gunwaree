@@ -1,0 +1,260 @@
+/* GunWaree decoration: water, cloud and rain details layered into the app shell by js/deco.js.
+   Everything here is aria-hidden, ignores the pointer and sits behind the content it decorates.
+   Movement is transform and opacity only; all of it stops for people who ask for reduced motion. */
+
+:root {
+  --wave-far: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 40' preserveAspectRatio='none'%3E%3Cpath d='M0 20C25 10 25 10 50 20S75 30 100 20 125 10 150 20 175 30 200 20V40H0Z' fill='%237CEBE3' fill-opacity='.16'/%3E%3C/svg%3E");
+  --wave-mid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 40' preserveAspectRatio='none'%3E%3Cpath d='M0 22C25 14 25 14 50 22S75 30 100 22 125 14 150 22 175 30 200 22V40H0Z' fill='%233FA7B8' fill-opacity='.28'/%3E%3C/svg%3E");
+  --wave-near: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 40' preserveAspectRatio='none'%3E%3Cpath d='M0 24C25 17 25 17 50 24S75 31 100 24 125 17 150 24 175 31 200 24V40H0Z' fill='%23C4F7F2' fill-opacity='.2'/%3E%3Cpath d='M0 24C25 17 25 17 50 24S75 31 100 24 125 17 150 24 175 31 200 24' fill='none' stroke='%23E6FFFB' stroke-opacity='.35' stroke-width='.8'/%3E%3C/svg%3E");
+}
+
+/* ---------- Shared pieces ---------- */
+
+/* A strip twice as wide as its box, tiled with one wave; sliding it half its width loops without a seam */
+/* --crest is how tall the moving surface is; below it, a deep sea (.sea--deep) is plain water */
+.wave {
+  position: absolute;
+  left: 0;
+  top: var(--off, 0px);
+  width: 200%;
+  height: calc(var(--crest, 100%) - var(--off, 0px));
+  background-repeat: repeat-x;
+  background-position: 0 100%;
+  background-size: var(--tile, 25%) 100%;
+  will-change: transform;
+  animation: wave-run var(--wave-t, 14s) linear infinite;
+}
+.wave--far { background-image: var(--wave-far); --wave-t: 22s; animation-direction: reverse; }
+.wave--mid { background-image: var(--wave-mid); --wave-t: 15s; --off: 3px; }
+.wave--near { background-image: var(--wave-near); --wave-t: 9s; --off: 6px; }
+@keyframes wave-run { to { transform: translate3d(-50%, 0, 0); } }
+
+/* The whole body of water bobs a little, like a tide breathing */
+.sea { position: absolute; inset: auto 0 0; pointer-events: none; animation: sea-bob 7s ease-in-out infinite alternate; }
+.sea--deep::before {
+  content: "";
+  position: absolute;
+  inset: var(--crest) 0 -12px;
+  /* starts at the colour the three wave layers add up to, so the surface and the depths meet without a seam */
+  background: linear-gradient(to bottom, rgb(71, 129, 135), rgb(26, 76, 86) 30%, rgb(8, 36, 44));
+}
+@keyframes sea-bob { from { transform: translateY(3px); } to { transform: translateY(-4px); } }
+
+/* Condensation on glass: a bright rim top-left and a dark lens below */
+.drop {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--d);
+  height: calc(var(--d) * 1.08);
+  border-radius: 50% 50% 48% 52% / 54% 54% 46% 46%;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.95) 0 9%, rgba(255, 255, 255, 0) 24%),
+    radial-gradient(circle at 60% 72%, rgba(196, 247, 242, 0.28) 0 22%, rgba(196, 247, 242, 0) 52%),
+    radial-gradient(circle at 50% 50%, rgba(10, 48, 58, 0) 52%, rgba(10, 48, 58, 0.45) 72%, rgba(10, 48, 58, 0) 74%);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.18);
+  opacity: var(--o, 0.75);
+  animation: drop-shine 6s ease-in-out var(--delay, 0s) infinite alternate;
+}
+@keyframes drop-shine { from { opacity: calc(var(--o, 0.75) * 0.7); } to { opacity: var(--o, 0.75); } }
+
+/* A drop that gives way and runs down the glass, leaving a thin wet trail */
+.drop--run { animation: drop-run var(--run-t, 9s) cubic-bezier(0.55, 0, 0.75, 0.4) var(--delay, 0s) infinite; }
+.drop--run::before {
+  content: "";
+  position: absolute;
+  left: 38%;
+  bottom: 70%;
+  width: 24%;
+  height: 0;
+  border-radius: 99px;
+  background: linear-gradient(to bottom, rgba(196, 247, 242, 0), rgba(196, 247, 242, 0.32));
+  animation: drop-trail var(--run-t, 9s) cubic-bezier(0.55, 0, 0.75, 0.4) var(--delay, 0s) infinite;
+}
+@keyframes drop-run {
+  0%, 55% { transform: translateY(0); opacity: 0; }
+  58% { opacity: var(--o, 0.8); }
+  92% { opacity: var(--o, 0.8); }
+  100% { transform: translateY(var(--fall, 160px)); opacity: 0; }
+}
+@keyframes drop-trail {
+  0%, 58% { height: 0; }
+  100% { height: var(--fall, 160px); }
+}
+
+/* Air bubbles rising through the water */
+.bubble {
+  position: absolute;
+  left: var(--x);
+  bottom: -8px;
+  width: var(--d);
+  height: var(--d);
+  border: 1px solid rgba(230, 255, 251, 0.55);
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 30%, rgba(255, 255, 255, 0.8) 0 14%, rgba(255, 255, 255, 0) 32%);
+  opacity: 0;
+  animation: bubble-up var(--t, 7s) ease-in var(--delay, 0s) infinite;
+}
+@keyframes bubble-up {
+  0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
+  12% { opacity: 0.9; }
+  50% { transform: translate(var(--sway, 6px), calc(var(--rise, 90px) * -0.5)) scale(0.9); }
+  85% { opacity: 0.75; }
+  100% { transform: translate(0, calc(var(--rise, 90px) * -1)) scale(1); opacity: 0; }
+}
+
+/* Soft cloud: three overlapping puffs drawn with gradients, so no blur filter is needed */
+.puff {
+  position: absolute;
+  top: var(--y);
+  left: 0;
+  width: var(--w, 16rem);
+  height: calc(var(--w, 16rem) * 0.42);
+  background:
+    radial-gradient(closest-side at 30% 62%, rgba(255, 255, 255, var(--a, 0.22)), rgba(255, 255, 255, 0)),
+    radial-gradient(closest-side at 55% 42%, rgba(255, 255, 255, var(--a, 0.22)), rgba(255, 255, 255, 0)),
+    radial-gradient(closest-side at 76% 64%, rgba(255, 255, 255, calc(var(--a, 0.22) * 0.8)), rgba(255, 255, 255, 0));
+  will-change: transform;
+  animation: puff-drift var(--t, 60s) linear var(--delay, 0s) infinite;
+}
+@keyframes puff-drift {
+  from { transform: translate3d(-110%, 0, 0); }
+  to { transform: translate3d(var(--span, 1400px), 0, 0); }
+}
+
+/* A light sheen that sweeps across glass now and then */
+.sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0.09) 48%, rgba(255, 255, 255, 0.16) 50%, rgba(255, 255, 255, 0) 60%);
+  background-size: 250% 100%;
+  background-repeat: no-repeat;
+  animation: sheen-sweep var(--t, 11s) ease-in-out var(--delay, 2s) infinite;
+}
+@keyframes sheen-sweep {
+  0%, 70% { background-position: 160% 0; }
+  100% { background-position: -60% 0; }
+}
+
+/* ---------- Behind the app: mist and flood water at the foot of the sky ---------- */
+
+.sky__mist {
+  position: absolute;
+  inset: auto -10% 0;
+  height: 45%;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 70% at 20% 100%, rgba(235, 248, 250, 0.4), rgba(235, 248, 250, 0)),
+    radial-gradient(50% 60% at 70% 100%, rgba(235, 248, 250, 0.32), rgba(235, 248, 250, 0)),
+    radial-gradient(40% 55% at 95% 100%, rgba(235, 248, 250, 0.28), rgba(235, 248, 250, 0));
+  animation: mist-roll 26s ease-in-out infinite alternate;
+}
+@keyframes mist-roll { from { transform: translate3d(-4%, 0, 0); } to { transform: translate3d(4%, -2%, 0); } }
+
+.sky__clouds { position: absolute; inset: 0 0 45%; overflow: hidden; pointer-events: none; }
+.sky__clouds .puff { --a: 0.32; }
+
+.sky__sea { height: clamp(70px, 11vh, 120px); --crest: 30px; --tile: 12.5%; }
+.sky__sea::before { background: linear-gradient(to bottom, rgb(20, 76, 94), rgb(10, 48, 58)); }
+.sky__sea .wave--far { --wave-far: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 40' preserveAspectRatio='none'%3E%3Cpath d='M0 20C25 10 25 10 50 20S75 30 100 20 125 10 150 20 175 30 200 20V40H0Z' fill='%233FA7B8' fill-opacity='.35'/%3E%3C/svg%3E"); }
+.sky__sea .wave--mid { --wave-mid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 40' preserveAspectRatio='none'%3E%3Cpath d='M0 22C25 14 25 14 50 22S75 30 100 22 125 14 150 22 175 30 200 22V40H0Z' fill='%23176F82' fill-opacity='.5'/%3E%3C/svg%3E"); }
+.sky__sea .wave--near { --wave-near: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 40' preserveAspectRatio='none'%3E%3Cpath d='M0 24C25 17 25 17 50 24S75 31 100 24 125 17 150 24 175 31 200 24V40H0Z' fill='%230A303A' fill-opacity='.62'/%3E%3Cpath d='M0 24C25 17 25 17 50 24S75 31 100 24 125 17 150 24 175 31 200 24' fill='none' stroke='%23C4F7F2' stroke-opacity='.6' stroke-width='.7'/%3E%3C/svg%3E"); }
+
+/* Splashes where rain meets the tops of cards, drawn by js/deco.js */
+.sky__splash { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+/* Far-off lightning: a soft brightening of the sky, never a hard strobe */
+.sky__flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(70% 60% at var(--fx, 70%) 0%, rgba(255, 255, 255, 0.85), rgba(214, 238, 255, 0.25) 55%, rgba(214, 238, 255, 0) 80%);
+}
+.sky__flash.is-on { animation: flash 1.3s ease-out; }
+@keyframes flash {
+  0% { opacity: 0; }
+  6% { opacity: 0.45; }
+  14% { opacity: 0.08; }
+  22% { opacity: 0.3; }
+  100% { opacity: 0; }
+}
+
+/* ---------- Sidebar: rain on the glass and water at the bottom ---------- */
+
+.sidebar > :not(.sb-deco) { position: relative; z-index: 1; }
+.sb-deco { position: absolute; inset: 0; z-index: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.sb-deco .sea { height: 8.5rem; --crest: 22px; --tile: 30%; }
+.sb-deco .wave--near { --wave-t: 8s; }
+/* Light from the surface wobbling across the water */
+.sb-deco .caustics {
+  position: absolute;
+  inset: 34px -30% -10%;
+  opacity: 0.5;
+  background:
+    radial-gradient(18% 9% at 20% 30%, rgba(196, 247, 242, 0.32), rgba(196, 247, 242, 0)),
+    radial-gradient(14% 7% at 55% 55%, rgba(196, 247, 242, 0.26), rgba(196, 247, 242, 0)),
+    radial-gradient(20% 8% at 80% 35%, rgba(196, 247, 242, 0.28), rgba(196, 247, 242, 0)),
+    radial-gradient(12% 6% at 38% 78%, rgba(196, 247, 242, 0.22), rgba(196, 247, 242, 0));
+  animation: caustics 9s ease-in-out infinite alternate;
+}
+@keyframes caustics {
+  from { transform: translate3d(-6%, 0, 0) scaleX(1); }
+  to { transform: translate3d(6%, -4%, 0) scaleX(1.12); }
+}
+.sb-deco .glass { position: absolute; inset: 0; }
+
+/* Phone tab bar: a thin running tide along its top edge */
+.tab-deco { position: absolute; inset: 0; z-index: -1; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.tab-deco .sea { height: 46%; opacity: 0.8; }
+
+/* ---------- Page titles: clouds drifting behind the glass ---------- */
+
+.page-head { position: relative; isolation: isolate; overflow: hidden; }
+.page-head > :not(.ph-deco) { position: relative; z-index: 1; }
+.ph-deco { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.ph-deco .puff { --a: 0.13; }
+.ph-deco .sea { height: 30%; opacity: 0.55; }
+.ph-deco .wave--near { --wave-t: 11s; }
+
+/* ---------- Top bar and footer ---------- */
+
+/* The top bar keeps overflow visible so the bell panel is never cut off; its decoration clips itself */
+.topbar { position: relative; z-index: 20; isolation: isolate; }
+.app-footer { position: relative; isolation: isolate; overflow: hidden; }
+.topbar > :not(.tb-deco), .app-footer > :not(.ft-deco) { position: relative; z-index: 1; }
+.tb-deco, .ft-deco { position: absolute; inset: 0; z-index: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.tb-deco .sea { height: 42%; opacity: 0.55; }
+.ft-deco .sea { height: 55%; opacity: 0.6; }
+.ft-deco .puff { --a: 0.1; }
+
+/* ---------- Ripples where people tap ---------- */
+
+.ripple {
+  position: fixed;
+  z-index: 200;
+  left: var(--x);
+  top: var(--y);
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border: 1.5px solid rgba(124, 235, 227, 0.85);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: ripple 900ms cubic-bezier(0.2, 0.7, 0.3, 1) var(--delay, 0ms) both;
+}
+.ripple--2 { border-color: rgba(196, 247, 242, 0.6); border-width: 1px; }
+@keyframes ripple {
+  from { transform: scale(0.4); opacity: 0.95; }
+  to { transform: scale(var(--s, 6)); opacity: 0; }
+}
+
+/* ---------- Reduced motion: the scene stays, nothing moves ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .wave, .sea, .drop, .drop--run, .drop--run::before, .bubble, .puff, .sheen,
+  .sky__mist, .sb-deco .caustics, .ripple { animation: none !important; }
+  .drop--run, .bubble, .sky__flash, .ripple { display: none; }
+  .puff { transform: translate3d(var(--still, 20%), 0, 0); }
+}
