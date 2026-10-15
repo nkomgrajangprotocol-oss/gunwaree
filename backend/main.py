@@ -221,36 +221,6 @@ def dams_latest():
     return result
 
 
-@app.get("/stations/history")
-def stations_history(
-    code: str = Query(min_length=1, max_length=32),
-    kind: Literal["canal", "river", "road", "rain"] = "river",
-    hours: int = Query(default=24, ge=1, le=72),
-):
-    """ค่าย้อนหลังของสถานีเดียว เรียงจากเก่าไปใหม่ ใช้วาดกราฟ (เช่นอยุธยา code=39 ในหน้า admin)
-    เก็บย้อนหลังได้ราว 72 ชม. ตาม backfill ค่าเป็นค่าดิบ ไม่ผ่าน guard จุดกระโดดของ /risk"""
-    conn = get_conn()
-    try:
-        source = _water_source(conn)
-        station = conn.execute(
-            "SELECT id, code, name, kind, bank, warn, crit FROM stations "
-            "WHERE source = ? AND kind = ? AND code = ?",
-            (source, kind, code),
-        ).fetchone()
-        if station is None:
-            raise HTTPException(status_code=404, detail="ไม่พบสถานี")
-        since = (datetime.now(TH_TZ) - timedelta(hours=hours)).strftime("%Y-%m-%d %H:%M:%S")
-        rows = conn.execute(
-            "SELECT water_level, depth_cm, rain_24h, measured_at FROM readings "
-            "WHERE station_id = ? AND measured_at >= ? ORDER BY measured_at",
-            (station["id"], since),
-        ).fetchall()
-    finally:
-        conn.close()
-    info = {k: station[k] for k in ("code", "name", "kind", "bank", "warn", "crit")}
-    return {**info, "source": source, "hours": hours, "readings": [dict(r) for r in rows]}
-
-
 @app.get("/risk")
 def get_risk():
     conn = get_conn()
