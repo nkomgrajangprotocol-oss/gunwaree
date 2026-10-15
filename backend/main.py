@@ -34,7 +34,7 @@ app = FastAPI(title="GunWaree API", lifespan=lifespan)
 # ตอน deploy ให้เพิ่มโดเมน Vercel เข้ามาใน list นี้
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5500", "http://localhost:5500"],
+    allow_origins=["https://gunwaree-frontend.vercel.app"],
     allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
 )
