@@ -1,9 +1,11 @@
 import sqlite3
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+import os
 
-# ไฟล์ฐานข้อมูลอยู่ข้าง db.py เสมอ ไม่ว่าจะรันจากโฟลเดอร์ไหน (*.db อยู่ใน .gitignore แล้ว)
-DB_PATH = Path(__file__).resolve().parent / "gunwaree.db"
+# บน hosting ตั้ง DB_PATH ชี้ไป volume (เช่น /data/gunwaree.db) เครื่องตัวเองไม่ต้องตั้ง ใช้ไฟล์ข้าง db.py เหมือนเดิม
+DB_PATH = Path(os.getenv("DB_PATH") or Path(__file__).resolve().parent / "gunwaree.db")
+DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 # ไทยไม่มีเวลาออมแสง ใช้ +7 คงที่ ไม่ต้องพึ่งฐานข้อมูลเขตเวลาของเครื่อง server
 TH_TZ = timezone(timedelta(hours=7))
