@@ -23,7 +23,7 @@
     login: 'login.html',
     signup: 'signup.html',
     client: 'home.html',
-    admin: 'home.html'      // the admin dashboard is not built yet
+    admin: 'admin.html'     // the Response Center
   };
 
   GW.url = function (key) {

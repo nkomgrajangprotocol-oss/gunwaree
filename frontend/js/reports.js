@@ -68,6 +68,7 @@
       }
     });
     placeThumb();
+    if (opts.moved) F.replay(thumb, 'is-moving', 400);
     if (window.location.hash !== '#' + name) {
       history.replaceState(null, '', '#' + name);
     }
@@ -76,13 +77,13 @@
   }
 
   tabs.forEach(function (t, i) {
-    t.addEventListener('click', function () { setTab(t.getAttribute('data-tab')); });
+    t.addEventListener('click', function () { setTab(t.getAttribute('data-tab'), { moved: t.getAttribute('data-tab') !== current }); });
     t.addEventListener('keydown', function (e) {
       var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
       if (!d) return;
       e.preventDefault();
       var next = tabs[(i + d + tabs.length) % tabs.length];
-      setTab(next.getAttribute('data-tab'), { focus: true });
+      setTab(next.getAttribute('data-tab'), { focus: true, moved: true });
     });
   });
 
@@ -197,6 +198,7 @@
 
     busy = true;
     submitBtn.setAttribute('aria-busy', 'true');
+    F.replay(submitBtn, 'is-launching', 700);
     submitLabel.textContent = lang.t('form.sending');
     GW.request('/incidents', {
       method: 'POST',
@@ -241,9 +243,10 @@
     desc.focus();
   });
 
-  /* ---------- Map pin (Leaflet, loaded from cdnjs) ---------- */
+  /* ---------- Map pin (OpenFreeMap through js/maps.js) ---------- */
 
   var map = null;
+  var mapLoading = false;
   var marker = null;
   var pin = null;   // { lat, lon } while a pin is set; only ever sent with the report
   var readout = $('[data-pin-readout]');
@@ -266,80 +269,85 @@
       : lang.t(mapFailed ? 'form.mapOffline' : 'form.noPin');
   }
 
+  // The pin drops in with a bounce and a ripple where it lands
   function setPin(lat, lon) {
     pin = { lat: round6(lat), lon: round6(lon) };
     readoutKey = null;
     if (map) {
-      var Leaf = window.L;
       if (!marker) {
-        marker = Leaf.marker([lat, lon], {
-          draggable: true,
-          keyboard: false,
-          icon: Leaf.divIcon({ className: 'pin', html: PIN_HTML, iconSize: [32, 40], iconAnchor: [16, 38] })
-        }).addTo(map);
+        var el = h('div', 'pin');
+        el.innerHTML = PIN_HTML;
+        marker = new window.maplibregl.Marker({ element: el, draggable: true, anchor: 'bottom' }).setLngLat([lon, lat]).addTo(map);
         marker.on('dragend', function () {
-          var p = marker.getLatLng();
+          var p = marker.getLngLat();
           pin = { lat: round6(p.lat), lon: round6(p.lng) };
           renderReadout();
         });
       } else {
-        marker.setLatLng([lat, lon]);
+        marker.setLngLat([lon, lat]);
       }
-      var el = marker.getElement();
-      if (el) { el.classList.remove('is-dropping'); void el.offsetWidth; el.classList.add('is-dropping'); }
+      F.replay(marker.getElement(), 'is-dropping', 1200);
     }
     clearBtn.hidden = false;
     setError('where', null);
     renderReadout();
   }
 
+  // Removing the pin lifts it off the map
   function clearPin() {
     pin = null;
-    if (marker) { marker.remove(); marker = null; }
     clearBtn.hidden = true;
     readoutKey = null;
     renderReadout();
+    if (!marker) return;
+    var old = marker;
+    marker = null;
+    if (F.reduceMotion()) { old.remove(); return; }
+    old.getElement().classList.add('is-lifting');
+    setTimeout(function () { old.remove(); }, 260);
   }
 
   function ensureMap() {
-    if (map || mapFailed || form.hidden || current !== 'new') { if (map) map.invalidateSize(); return; }
-    var Leaf = window.L;
-    if (!Leaf || typeof Leaf.map !== 'function') {
-      mapFailed = true;
-      mapEl.hidden = true;
-      renderReadout();
-      return;
-    }
-    map = Leaf.map(mapEl, { scrollWheelZoom: false, zoomControl: true }).setView(BANGKOK, 11);
-    Leaf.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19,
-      subdomains: 'abcd',
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-    }).addTo(map);
-    map.on('click', function (e) { setPin(e.latlng.lat, e.latlng.lng); });
-    // Keyboard: arrows pan the map (Leaflet), Enter pins its centre
-    mapEl.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' && e.target === mapEl) {
-        e.preventDefault();
-        var c = map.getCenter();
-        setPin(c.lat, c.lng);
+    if (map) { map.resize(); return; }
+    if (mapLoading || mapFailed || form.hidden || current !== 'new') return;
+    mapLoading = true;
+    GW.maps.create(mapEl, { center: [BANGKOK[1], BANGKOK[0]], zoom: 11 }).then(function (m) {
+      mapLoading = false;
+      if (!m) {
+        mapFailed = true;
+        mapEl.hidden = true;
+        renderReadout();
+        return;
       }
+      map = m;
+      map.on('click', function (e) { setPin(e.lngLat.lat, e.lngLat.lng); });
+      // Keyboard: arrows pan the map, Enter pins its centre
+      map.getCanvas().addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          var c = map.getCenter();
+          setPin(c.lat, c.lng);
+        }
+      });
+      if (pin) setPin(pin.lat, pin.lon);
+      renderReadout();
     });
-    if (pin) setPin(pin.lat, pin.lon);
-    renderReadout();
   }
 
+  // Use my location: the crosshair spins while the browser looks, then the map flies there in 3D
   locateBtn.addEventListener('click', function () {
     if (!navigator.geolocation || !window.isSecureContext) { readoutKey = 'form.locateFail'; renderReadout(); return; }
     readoutKey = 'form.locating';
     renderReadout();
     locateBtn.disabled = true;
+    locateBtn.classList.add('is-busy');
+    function done() { locateBtn.disabled = false; locateBtn.classList.remove('is-busy'); }
     navigator.geolocation.getCurrentPosition(function (p) {
-      locateBtn.disabled = false;
+      done();
       setPin(p.coords.latitude, p.coords.longitude);
-      if (map) map.setView([p.coords.latitude, p.coords.longitude], 16);
+      if (map) map.flyTo({ center: [p.coords.longitude, p.coords.latitude], zoom: 16.5, pitch: 50, bearing: -15, speed: 1.2 });
     }, function () {
-      locateBtn.disabled = false;
+      done();
       readoutKey = 'form.locateFail';
       renderReadout();
     }, { timeout: 10000, maximumAge: 0 });
@@ -461,6 +469,10 @@
       }
       return;
     }
+    // Nothing changed since the last poll: leave the list exactly as it is, so the page never "refreshes"
+    var sig = JSON.stringify(mine.list) + '|' + lang.get() + '|' + current;
+    if (sig === mine.sig) return;
+    mine.sig = sig;
     renderTally();
     listEl.textContent = '';
 

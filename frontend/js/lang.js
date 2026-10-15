@@ -5,6 +5,7 @@
    Markup hooks
      data-i18n="key"             text content
      data-i18n-aria="key"        aria-label
+     data-i18n-tip="key"         tooltip text (title for the collapsed sidebar)
      data-i18n-ph="key"          placeholder
      data-lang-btn="th" / "en"   the switch buttons
    Scripts listen for the "gw:lang" event to re-render dynamic text. */
@@ -40,6 +41,18 @@
     'nav.reports': { en: 'Rescue reports', th: 'แจ้งเหตุและติดตาม' },
     'nav.dams': { en: 'Dam levels', th: 'ระดับน้ำในเขื่อน' },
     'nav.soon': { en: 'Soon', th: 'เร็วๆ นี้' },
+    'nav.menu': { en: 'Menu', th: 'เมนู' },
+    'nav.levels': { en: 'Levels', th: 'ระดับน้ำ' },
+    'nav.water': { en: 'Water levels', th: 'ระดับน้ำคลองและแม่น้ำ' },
+    'nav.damsSub': { en: 'The 4 main dams and the Chao Phraya dam', th: '4 เขื่อนหลักและเขื่อนเจ้าพระยา' },
+    'nav.waterSub': { en: 'Rivers, canals and road flooding in Bangkok', th: 'แม่น้ำ คลอง และน้ำท่วมถนนในกรุงเทพฯ' },
+    'nav.sos': { en: 'Emergency 1669', th: 'ฉุกเฉิน 1669' },
+    'sb.collapse': { en: 'Collapse sidebar', th: 'ย่อแถบเมนู' },
+    'sb.expand': { en: 'Expand sidebar', th: 'ขยายแถบเมนู' },
+    'account.label': { en: 'Account', th: 'บัญชี' },
+    'account.guest': { en: 'Not logged in', th: 'ยังไม่ได้เข้าสู่ระบบ' },
+    'account.client': { en: 'Member', th: 'ผู้ใช้ทั่วไป' },
+    'account.admin': { en: 'Admin', th: 'ผู้ดูแลระบบ' },
     'top.location': { en: 'Bangkok, Thailand', th: 'กรุงเทพฯ ประเทศไทย' },
     'bell.label': { en: 'Alerts', th: 'การแจ้งเตือน' },
     'bell.title': { en: 'Flood alerts', th: 'การแจ้งเตือนน้ำท่วม' },
@@ -66,7 +79,8 @@
     'hero.basin': { en: 'Bangkok and the Chao Phraya River basin', th: 'กรุงเทพฯ และลุ่มน้ำเจ้าพระยา' },
     'hero.note': { en: 'A clearer view of the water around you.', th: 'ติดตามสถานการณ์น้ำรอบตัวคุณ' },
 
-    'risk.label': { en: 'Model-estimated risk score', th: 'คะแนนความเสี่ยงที่โมเดลประเมิน' },
+    'risk.label': { en: 'Risk level from a simple rule', th: 'ระดับความเสี่ยงจากกฎง่ายๆ' },
+    'risk.how': { en: 'Worked out from the river level at Ayutthaya and its 6-hour trend. Not an AI model.', th: 'คำนวณจากระดับน้ำที่อยุธยาและแนวโน้ม 6 ชั่วโมง ไม่ใช่โมเดล AI' },
     'risk.target': { en: 'Ayutthaya (station 39), next 24 hours', th: 'พระนครศรีอยุธยา (สถานี 39) ภายใน 24 ชั่วโมง' },
     'risk.reading': { en: 'Water {wl} m, bank {bank} m', th: 'ระดับน้ำ {wl} ม. ตลิ่ง {bank} ม.' },
     'risk.nodata': { en: 'No data to assess yet', th: 'ยังไม่มีข้อมูลให้ประเมิน' },
@@ -76,7 +90,7 @@
     'risk.desc.warning': { en: 'The river is close to its bank and rising. Prepare to move belongings higher.', th: 'ระดับน้ำใกล้ตลิ่งและกำลังสูงขึ้น เตรียมยกของขึ้นที่สูง' },
     'risk.desc.critical': { en: 'The river has reached its bank. Follow official evacuation guidance.', th: 'ระดับน้ำถึงตลิ่งแล้ว ปฏิบัติตามคำแนะนำการอพยพของหน่วยงาน' },
 
-    'banner.advisory': { en: 'Risk score at {level} for the river at Ayutthaya', th: 'คะแนนความเสี่ยงระดับ{level} สำหรับแม่น้ำที่อยุธยา' },
+    'banner.advisory': { en: 'Risk level {level} for the river at Ayutthaya', th: 'ระดับความเสี่ยง{level} สำหรับแม่น้ำที่อยุธยา' },
     'banner.alert': { en: 'Alert from the GunWaree team', th: 'การแจ้งเตือนจากทีม GunWaree' },
     'banner.guidance': { en: 'Avoid flooded roads and follow local evacuation guidance.', th: 'หลีกเลี่ยงถนนที่น้ำท่วมและปฏิบัติตามคำแนะนำของหน่วยงานท้องถิ่น' },
 
@@ -288,7 +302,234 @@
     'dams.cls.high': { en: 'High', th: 'น้ำมาก' },
     'dams.cls.over': { en: 'Over capacity', th: 'น้ำล้นอ่าง' },
     'dams.error': { en: 'Dam data could not be loaded.', th: 'โหลดข้อมูลเขื่อนไม่ได้' },
-    'dams.select': { en: 'Show {name}', th: 'แสดง{name}' }
+    'dams.select': { en: 'Show {name}', th: 'แสดง{name}' },
+    'dams.mapTitle': { en: 'Dam map', th: 'แผนที่เขื่อน' },
+    'dams.mapHint': { en: 'Each marker fills with the water stored behind that dam.', th: 'หมุดแต่ละอันแสดงปริมาณน้ำในอ่างของเขื่อนนั้น' },
+
+    // Maps (OpenFreeMap tiles drawn with MapLibre)
+    'map.zoomIn': { en: 'Zoom in', th: 'ขยาย' },
+    'map.zoomOut': { en: 'Zoom out', th: 'ย่อ' },
+    'map.reset': { en: 'Show everything', th: 'แสดงทั้งหมด' },
+    'map.tilt': { en: 'Tilt the map in 3D', th: 'เอียงแผนที่แบบ 3 มิติ' },
+    'map.offline': { en: 'The map could not load. Check the internet connection.', th: 'โหลดแผนที่ไม่ได้ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต' },
+    'map.gestureWin': { en: 'Use Ctrl + scroll to zoom the map', th: 'กด Ctrl ค้างแล้วเลื่อนเพื่อซูมแผนที่' },
+    'map.gestureMac': { en: 'Use \u2318 + scroll to zoom the map', th: 'กด \u2318 ค้างแล้วเลื่อนเพื่อซูมแผนที่' },
+    'map.gestureMobile': { en: 'Use two fingers to move the map', th: 'ใช้สองนิ้วเพื่อเลื่อนแผนที่' },
+
+    // Water levels
+    'water.title': { en: 'Water levels', th: 'ระดับน้ำคลองและแม่น้ำ' },
+    'water.sub': {
+      en: 'Rivers and canals around Bangkok, and flooding on roads. Gauges report every 10 to 20 minutes.',
+      th: 'แม่น้ำและคลองในกรุงเทพฯ และน้ำท่วมถนน สถานีรายงานทุก 10 ถึง 20 นาที'
+    },
+    'water.search': { en: 'Search station, canal or district', th: 'ค้นหาสถานี คลอง หรือเขต' },
+    'water.kinds': { en: 'Station type', th: 'ประเภทสถานี' },
+    'water.kAll': { en: 'All', th: 'ทั้งหมด' },
+    'water.kRiver': { en: 'Rivers', th: 'แม่น้ำ' },
+    'water.kCanal': { en: 'Canals', th: 'คลอง' },
+    'water.kRoad': { en: 'Road flooding', th: 'น้ำท่วมถนน' },
+    'water.river': { en: 'River gauge', th: 'สถานีวัดแม่น้ำ' },
+    'water.canal': { en: 'Canal gauge', th: 'สถานีวัดคลอง' },
+    'water.road': { en: 'Road flood point', th: 'จุดวัดน้ำท่วมถนน' },
+    'water.statuses': { en: 'Filter by status', th: 'กรองตามสถานะ' },
+    'wst.over': { en: 'Overflowing', th: 'น้ำล้น' },
+    'wst.crit': { en: 'Critical', th: 'วิกฤต' },
+    'wst.warn': { en: 'Watch', th: 'เฝ้าระวัง' },
+    'wst.normal': { en: 'Normal', th: 'ปกติ' },
+    'wst.stale': { en: 'No recent report', th: 'ไม่มีรายงานล่าสุด' },
+    'water.mapTitle': { en: 'Station map', th: 'แผนที่สถานีวัด' },
+    'water.mapHint': { en: 'Select a station to see its reading.', th: 'เลือกสถานีเพื่อดูค่าที่วัดได้' },
+    'water.pick': { en: 'Select a station on the map or in the list to see its reading.', th: 'เลือกสถานีบนแผนที่หรือจากรายการเพื่อดูค่าที่วัดได้' },
+    'water.level': { en: 'Water level', th: 'ระดับน้ำ' },
+    'water.msl': { en: 'm MSL', th: 'ม.รทก.' },
+    'water.bank': { en: 'Bank', th: 'ตลิ่ง' },
+    'water.warnLv': { en: 'Watch level', th: 'ระดับเฝ้าระวัง' },
+    'water.critLv': { en: 'Critical level', th: 'ระดับวิกฤต' },
+    'water.toBank': { en: '{d} m below the bank', th: 'ต่ำกว่าตลิ่ง {d} ม.' },
+    'water.overBank': { en: '{d} m over the bank', th: 'สูงกว่าตลิ่ง {d} ม.' },
+    'water.noBank': { en: 'Bank height not reported', th: 'ไม่มีข้อมูลระดับตลิ่ง' },
+    'water.depth': { en: 'Flood depth on the road', th: 'ความลึกน้ำท่วมถนน' },
+    'water.district': { en: 'District', th: 'เขต' },
+    'water.code': { en: 'Station code', th: 'รหัสสถานี' },
+    'water.stale': { en: 'No report for over 6 hours, so this reading may be out of date.', th: 'ไม่มีรายงานเกิน 6 ชั่วโมง ค่านี้อาจไม่เป็นปัจจุบัน' },
+    'water.list': { en: 'Stations', th: 'สถานีวัด' },
+    'water.listSub': { en: 'Most urgent first', th: 'เรียงจากที่ต้องติดตามมากที่สุด' },
+    'water.showAll': { en: 'Show all {n}', th: 'แสดงทั้งหมด {n} แห่ง' },
+    'water.showLess': { en: 'Show fewer', th: 'แสดงน้อยลง' },
+    'water.noMatch': { en: 'No station matches your search.', th: 'ไม่พบสถานีที่ค้นหา' },
+    'water.count': { en: '{n} stations', th: '{n} สถานี' },
+    'water.legend': {
+      en: 'Rivers and canals: overflowing means at or over the bank; critical and watch use the Bangkok Drainage Office levels where a gauge has them. Roads: overflowing is 30 cm or deeper, critical over 10 cm, watch 5 to 10 cm.',
+      th: 'แม่น้ำและคลอง: น้ำล้นคือระดับน้ำถึงหรือเกินตลิ่ง ระดับวิกฤตและเฝ้าระวังใช้เกณฑ์ของสำนักการระบายน้ำเมื่อสถานีมีค่านี้ ถนน: น้ำล้นคือลึกตั้งแต่ 30 ซม. วิกฤตเกิน 10 ซม. เฝ้าระวัง 5 ถึง 10 ซม.'
+    },
+    'water.kit': { en: 'GunWaree test sensor', th: 'ชุดทดลอง GunWaree' },
+    'water.kitSub': { en: 'Our ESP32 prototype gauge, not a public station.', th: 'เครื่องวัดต้นแบบ ESP32 ของทีม ไม่ใช่สถานีสาธารณะ' },
+    'kit.green': { en: 'Normal', th: 'ปกติ' },
+    'kit.yellow': { en: 'Watch', th: 'เฝ้าระวัง' },
+    'kit.red': { en: 'Critical', th: 'วิกฤต' },
+    'water.error': { en: 'Station data could not be loaded.', th: 'โหลดข้อมูลสถานีไม่ได้' },
+    'water.cm': { en: '{d} cm', th: '{d} ซม.' },
+
+    // Risk prediction (rule B2 in backend/risk.py)
+    'rp.title': { en: 'Risk prediction', th: 'พยากรณ์ความเสี่ยง' },
+    'rp.sub': {
+      en: 'Will the Chao Phraya at Ayutthaya reach its bank within the next 24 hours?',
+      th: 'แม่น้ำเจ้าพระยาที่อยุธยาจะถึงตลิ่งภายใน 24 ชั่วโมงข้างหน้าหรือไม่'
+    },
+    'rp.loading': { en: 'Checking the river…', th: 'กำลังตรวจระดับน้ำ…' },
+    'rp.official2': { en: 'Follow guidance from the DDPM and the BMA.', th: 'โปรดปฏิบัติตามคำแนะนำของ ปภ. และ กทม.' },
+    'rp.f.where': { en: 'Station', th: 'สถานี' },
+    'rp.f.until': { en: 'Looks ahead to', th: 'มองไปข้างหน้าถึง' },
+    'rp.f.ran': { en: 'Checked', th: 'ประเมินเมื่อ' },
+    'rp.f.reading': { en: 'Reading used', th: 'ค่าที่ใช้ประเมิน' },
+    'rp.f.next': { en: 'Next check', th: 'ตรวจครั้งถัดไป' },
+    'rp.in': { en: 'in {t}', th: 'อีก {t}' },
+    'rp.d.bank': { en: 'Bank {v} m', th: 'ตลิ่ง {v} ม.' },
+    'rp.d.watch': { en: 'Watch line {v} m', th: 'เส้นเฝ้าระวัง {v} ม.' },
+    'rp.d.now': { en: 'Now {v} m', th: 'ตอนนี้ {v} ม.' },
+    'rp.d.none': { en: 'No recent reading', th: 'ไม่มีค่าล่าสุด' },
+    'rp.d.hint': { en: 'Move the pointer over the river to turn it.', th: 'เลื่อนเมาส์บนภาพแม่น้ำเพื่อหมุนดู' },
+    'rp.d.alt': {
+      en: 'Cross-section of the river at Ayutthaya: water at {wl} m, watch line at {watch} m, bank at {bank} m.',
+      th: 'ภาพตัดขวางแม่น้ำที่อยุธยา: ระดับน้ำ {wl} ม. เส้นเฝ้าระวัง {watch} ม. ตลิ่ง {bank} ม.'
+    },
+
+    'rp.ruleTitle': { en: 'How the level is decided', th: 'ระดับความเสี่ยงตัดสินอย่างไร' },
+    'rp.ruleSub': {
+      en: 'Rule B2 checks the latest reading at Ayutthaya from the top down and stops at the first match.',
+      th: 'กฎ B2 ตรวจค่าล่าสุดที่อยุธยาจากบนลงล่าง และหยุดที่ข้อแรกที่ตรง'
+    },
+    'rp.cond.critical': { en: 'The river is at or over its bank ({bank} m).', th: 'ระดับน้ำถึงหรือเกินตลิ่ง ({bank} ม.)' },
+    'rp.cond.warning': { en: 'Above the watch line ({watch} m) and higher than 6 hours earlier.', th: 'สูงกว่าเส้นเฝ้าระวัง ({watch} ม.) และสูงกว่าเมื่อ 6 ชั่วโมงก่อน' },
+    'rp.cond.watch': {
+      en: 'Above the watch line, but not rising, or no reading from 6 hours earlier to compare.',
+      th: 'สูงกว่าเส้นเฝ้าระวัง แต่ไม่ได้สูงขึ้น หรือไม่มีค่าเมื่อ 6 ชั่วโมงก่อนให้เทียบ'
+    },
+    'rp.cond.none': { en: 'At or below the watch line ({watch} m).', th: 'เท่ากับหรือต่ำกว่าเส้นเฝ้าระวัง ({watch} ม.)' },
+    'rp.now': { en: 'Now', th: 'ตอนนี้' },
+    'rp.whyTitle': { en: 'Why {level} now', th: 'ทำไมตอนนี้เป็นระดับ{level}' },
+    'rp.q.bank': { en: 'At or over the bank ({bank} m)?', th: 'ถึงหรือเกินตลิ่ง ({bank} ม.) หรือไม่' },
+    'rp.q.watch': { en: 'Above the watch line ({watch} m)?', th: 'สูงกว่าเส้นเฝ้าระวัง ({watch} ม.) หรือไม่' },
+    'rp.q.rise': { en: 'Higher than 6 hours earlier?', th: 'สูงกว่าเมื่อ 6 ชั่วโมงก่อนหรือไม่' },
+    'rp.a.yes': { en: 'Yes', th: 'ใช่' },
+    'rp.a.no': { en: 'No', th: 'ไม่ใช่' },
+    'rp.a.noOrNone': { en: 'No, or nothing to compare', th: 'ไม่ใช่ หรือไม่มีค่าให้เทียบ' },
+    'rp.a.skip': { en: 'Not checked', th: 'ไม่ต้องตรวจ' },
+    'rp.whyNoData': {
+      en: 'There is no reading from Ayutthaya in the last 3 hours, so the rule does not guess.',
+      th: 'ไม่มีค่าจากอยุธยาใน 3 ชั่วโมงที่ผ่านมา กฎจึงไม่ประเมิน'
+    },
+    'rp.watchLine': {
+      en: 'The watch line is 0.30 m below the bank. That margin was picked from the 2020 to 2024 records.',
+      th: 'เส้นเฝ้าระวังอยู่ต่ำกว่าตลิ่ง 0.30 ม. ค่านี้เลือกจากข้อมูลปี 2020 ถึง 2024'
+    },
+
+    'rp.inTitle': { en: 'What the rule looked at', th: 'ข้อมูลที่กฎใช้' },
+    'rp.inSub': { en: 'River level at Ayutthaya (station 39), in metres above mean sea level', th: 'ระดับน้ำที่อยุธยา (สถานี 39) หน่วยเมตร รทก.' },
+    'rp.in.level': { en: 'Water level', th: 'ระดับน้ำ' },
+    'rp.in.bank': { en: 'Bank', th: 'ตลิ่ง' },
+    'rp.in.watch': { en: 'Watch line', th: 'เส้นเฝ้าระวัง' },
+    'rp.in.gap': { en: 'To the bank', th: 'ห่างจากตลิ่ง' },
+    'rp.in.below': { en: '{d} m below', th: 'ต่ำกว่า {d} ม.' },
+    'rp.in.over': { en: '{d} m over', th: 'เกิน {d} ม.' },
+    'rp.in.trend': { en: '6-hour trend', th: 'แนวโน้ม 6 ชั่วโมง' },
+    'rp.trend.warning': { en: 'Rising: higher than 6 hours earlier', th: 'กำลังสูงขึ้น: สูงกว่าเมื่อ 6 ชั่วโมงก่อน' },
+    'rp.trend.watch': { en: 'Not rising, or no reading from 6 hours earlier', th: 'ไม่ได้สูงขึ้น หรือไม่มีค่าเมื่อ 6 ชั่วโมงก่อน' },
+    'rp.trend.other': { en: 'Not needed at this level', th: 'ระดับนี้ไม่ต้องใช้' },
+    'rp.trend.unknown': { en: 'Shown once the rule has run', th: 'แสดงเมื่อกฎประเมินแล้ว' },
+    'rp.trendNote': {
+      en: 'The server does not send the 6-hour change itself; this follows from the level.',
+      th: 'เซิร์ฟเวอร์ไม่ได้ส่งค่าการเปลี่ยนแปลง 6 ชั่วโมงมา ข้อความนี้อนุมานจากระดับความเสี่ยง'
+    },
+    'rp.same': { en: 'The rule used this same reading.', th: 'กฎใช้ค่านี้ในการประเมิน' },
+    'rp.diff': {
+      en: 'The rule used the reading from {time}. The one shown here was taken at another time, or was set aside as an odd jump.',
+      th: 'กฎใช้ค่าเมื่อ {time} ค่าที่แสดงนี้วัดคนละเวลา หรือถูกกันออกเพราะกระโดดผิดปกติ'
+    },
+    'rp.stale': { en: 'No report for over 6 hours', th: 'ไม่มีรายงานเกิน 6 ชั่วโมง' },
+
+    'rp.alongTitle': { en: 'Along the Chao Phraya', th: 'ตลอดแม่น้ำเจ้าพระยา' },
+    'rp.alongSub': { en: 'North to south. Context only: the rule uses Ayutthaya alone.', th: 'เรียงจากเหนือลงใต้ ใช้ประกอบเท่านั้น กฎใช้เฉพาะอยุธยา' },
+    'rp.st568': { en: 'Nakhon Sawan, Dechatiwong Bridge', th: 'นครสวรรค์ สะพานเดชาติวงศ์' },
+    'rp.st39': { en: 'Ayutthaya', th: 'พระนครศรีอยุธยา' },
+    'rp.st4': { en: 'Bangkok Bridge', th: 'สะพานกรุงเทพ' },
+    'rp.up': { en: 'Upstream', th: 'เหนือน้ำ' },
+    'rp.target': { en: 'Station the rule uses', th: 'สถานีที่กฎใช้' },
+    'rp.down': { en: 'Bangkok', th: 'กรุงเทพฯ' },
+    'rp.readingOnly': { en: '{wl} m MSL', th: '{wl} ม.รทก.' },
+
+    'rp.trackTitle': { en: 'How it did on past floods', th: 'ผลย้อนหลังกับน้ำท่วมจริง' },
+    'rp.trackSub': { en: 'Hours of warning before the river first reached its bank at Ayutthaya', th: 'เตือนล่วงหน้ากี่ชั่วโมงก่อนน้ำถึงตลิ่งที่อยุธยาครั้งแรก' },
+    'rp.k.watch': { en: 'Watch or higher', th: 'ระดับเฝ้าระวังขึ้นไป' },
+    'rp.k.warning': { en: 'Warning or higher', th: 'ระดับเตือนภัยขึ้นไป' },
+    'rp.k.late': { en: 'Too late', th: 'เตือนช้า' },
+    'rp.early': { en: '{h} h ahead', th: 'ก่อน {h} ชม.' },
+    'rp.late': { en: '{h} h late', th: 'ช้า {h} ชม.' },
+    'rp.hours': { en: '{h} h', th: '{h} ชม.' },
+    'rp.atBank': { en: 'Reached the bank {time}', th: 'ถึงตลิ่ง {time}' },
+    'rp.tag.test': { en: 'Independent test', th: 'ทดสอบอิสระ' },
+    'rp.tag.tune': { en: 'Helped pick the margin', th: 'ใช้เลือกค่าเกณฑ์' },
+    'rp.trackSum': {
+      en: 'Warned before the bank was reached in 4 of 5 floods at Watch or higher, and 3 of 5 at Warning or higher. The misses were floods that climbed from below the watch line to the bank within a few hours.',
+      th: 'เตือนก่อนน้ำถึงตลิ่ง 4 จาก 5 เหตุการณ์ที่ระดับเฝ้าระวังขึ้นไป และ 3 จาก 5 ที่ระดับเตือนภัยขึ้นไป ครั้งที่พลาดคือน้ำขึ้นจากต่ำกว่าเส้นเฝ้าระวังถึงตลิ่งภายในไม่กี่ชั่วโมง'
+    },
+    'rp.trackNote': {
+      en: 'Only 5 floods reached the bank at Ayutthaya from 2020 to 2025, so these are examples, not an accuracy score. 2021 and 2022 were used to pick the 0.30 m margin, so they look better than new data would; 2025 was checked once and nothing was changed afterwards. The search looked back at most 72 hours, so values near 72 are capped. In 2025 the rule also gave Warning or higher on 9 days when the bank was not reached within the next 24 hours.',
+      th: 'อยุธยามีน้ำถึงตลิ่งเพียง 5 เหตุการณ์ในปี 2020 ถึง 2025 ตัวเลขนี้จึงเป็นตัวอย่าง ไม่ใช่คะแนนความแม่นยำ ปี 2021 และ 2022 ใช้เลือกค่า 0.30 ม. จึงดูดีกว่าข้อมูลใหม่ ส่วนปี 2025 ตรวจครั้งเดียวและไม่ได้ปรับอะไรตามผล การค้นย้อนหลังได้ไม่เกิน 72 ชั่วโมง ค่าที่ใกล้ 72 จึงถูกตัดที่ขอบ ในปี 2025 กฎยังให้ระดับเตือนภัยขึ้นไป 9 วันที่น้ำไม่ถึงตลิ่งภายใน 24 ชั่วโมงถัดมา'
+    },
+
+    'rp.logTitle': { en: 'Recent predictions', th: 'ผลประเมินล่าสุด' },
+    'rp.logSub': { en: 'Admins only. The server stores one row each time the risk is checked.', th: 'เฉพาะผู้ดูแลระบบ เซิร์ฟเวอร์บันทึกหนึ่งแถวทุกครั้งที่ประเมินความเสี่ยง' },
+    'rp.logEmpty': { en: 'No predictions stored yet.', th: 'ยังไม่มีผลประเมินที่บันทึกไว้' },
+    'rp.logError': { en: 'The prediction log could not be loaded.', th: 'โหลดบันทึกผลประเมินไม่ได้' },
+    'rp.logRange': { en: 'Last {n}, from {from} to {to}', th: '{n} รายการล่าสุด ตั้งแต่ {from} ถึง {to}' },
+    'rp.logOutcome': { en: '{n} with a recorded outcome', th: 'มีผลจริงบันทึกแล้ว {n} รายการ' },
+
+    'rp.limTitle': { en: 'What this is, and what it is not', th: 'ระบบนี้คืออะไร และไม่ใช่อะไร' },
+    'rp.l1t': { en: 'A rule, not an AI model', th: 'เป็นกฎ ไม่ใช่โมเดล AI' },
+    'rp.l1': {
+      en: 'We tested three machine-learning models, but Ayutthaya had only 5 real floods from 2020 to 2025, too few to show that any of them beats this rule. Every prediction is stored, so a model can be checked against real outcomes later.',
+      th: 'เราทดสอบโมเดล machine learning 3 แบบ แต่อยุธยามีน้ำท่วมจริงเพียง 5 ครั้งในปี 2020 ถึง 2025 น้อยเกินกว่าจะพิสูจน์ว่าโมเดลใดดีกว่ากฎนี้ ระบบบันทึกผลประเมินทุกครั้งไว้เทียบกับผลจริงภายหลัง'
+    },
+    'rp.l2t': { en: 'A level, not a probability', th: 'เป็นระดับ ไม่ใช่ความน่าจะเป็น' },
+    'rp.l2': {
+      en: 'There are only four levels. The server also sends them as 0, 33, 67 or 100, but that number is the level, not a chance of flooding.',
+      th: 'มีเพียง 4 ระดับ เซิร์ฟเวอร์ส่งเป็นตัวเลข 0, 33, 67 หรือ 100 ด้วย แต่ตัวเลขนั้นคือระดับ ไม่ใช่โอกาสเกิดน้ำท่วม'
+    },
+    'rp.l3t': { en: 'Ayutthaya, not your street', th: 'อยุธยา ไม่ใช่ถนนหน้าบ้านคุณ' },
+    'rp.l3': {
+      en: 'It watches water from the north arriving at Ayutthaya. It does not predict flooding on roads in Bangkok; Water levels shows that.',
+      th: 'ระบบดูน้ำเหนือที่มาถึงอยุธยา ไม่ได้ทำนายน้ำท่วมถนนในกรุงเทพฯ ดูได้ที่หน้าระดับน้ำคลองและแม่น้ำ'
+    },
+    'rp.l4t': { en: 'Odd readings are set aside', th: 'ค่าที่ผิดปกติถูกกันออก' },
+    'rp.l4': {
+      en: 'If the newest reading jumps more than 1 m from the median of the readings before it (up to 4 from the last 6 hours, at least 3 needed), the rule uses that median instead.',
+      th: 'หากค่าล่าสุดต่างจากค่ามัธยฐานของค่าก่อนหน้า (สูงสุด 4 ค่าใน 6 ชั่วโมง ต้องมีอย่างน้อย 3 ค่า) เกิน 1 ม. กฎจะใช้ค่ามัธยฐานนั้นแทน'
+    },
+    'rp.l5t': { en: 'No reading, no guess', th: 'ไม่มีข้อมูล ไม่เดา' },
+    'rp.l5': {
+      en: 'If Ayutthaya has not reported for 3 hours, no level is shown at all.',
+      th: 'หากอยุธยาไม่ได้รายงานค่าเกิน 3 ชั่วโมง จะไม่แสดงระดับความเสี่ยงเลย'
+    },
+    'rp.l6t': { en: 'Fast rises can slip through', th: 'น้ำขึ้นเร็วอาจเตือนไม่ทัน' },
+    'rp.l6': {
+      en: 'A fixed line can fall behind when the river climbs from below the watch line to the bank in a few hours. This is not an official warning: follow the DDPM and the BMA.',
+      th: 'เส้นเกณฑ์คงที่อาจตามไม่ทันเมื่อน้ำขึ้นจากต่ำกว่าเส้นเฝ้าระวังถึงตลิ่งภายในไม่กี่ชั่วโมง ระบบนี้ไม่ใช่ประกาศเตือนภัยทางการ โปรดปฏิบัติตาม ปภ. และ กทม.'
+    },
+
+    // Notice shown when Dam levels or Water levels opens
+    'notice.title': { en: 'Before you look: some readings may be missing', th: 'ก่อนเริ่มดู: ข้อมูลบางส่วนอาจยังไม่ครบ' },
+    'notice.body': {
+      en: 'We only show what the gauges and dam operators actually send us. When a reading has not arrived yet, you will see \u201cAwaiting report\u201d or \u201cNo recent report\u201d instead of a number, because we would rather leave a gap than show you a guess.',
+      th: 'เราแสดงเฉพาะค่าที่สถานีวัดและหน่วยงานดูแลเขื่อนส่งมาจริงเท่านั้น หากค่าใดยังมาไม่ถึง คุณจะเห็นคำว่า \u201cรอการรายงาน\u201d หรือ \u201cไม่มีรายงานล่าสุด\u201d แทนตัวเลข เพราะเราเลือกที่จะเว้นว่างไว้ ดีกว่าแสดงตัวเลขที่เดาขึ้นมาเอง'
+    },
+    'notice.sorry': {
+      en: 'We are sorry if a missing figure makes things harder for you, and we are grateful for your patience while the data catches up.',
+      th: 'ขออภัยหากข้อมูลที่ขาดหายทำให้คุณไม่สะดวก และขอบคุณที่อดทนรอระหว่างที่ข้อมูลกำลังตามมา'
+    },
+    'notice.dont': { en: 'Do not show this again on this device', th: 'ไม่ต้องแสดงอีกบนอุปกรณ์นี้' },
+    'notice.ok': { en: 'I understand', th: 'รับทราบ' },
+    'status.paused': { en: 'Updates paused while you read', th: 'หยุดอัปเดตชั่วคราวขณะคุณอ่าน' }
   };
 
   // English names for the fixed places the backend returns in Thai
@@ -359,6 +600,9 @@
     document.querySelectorAll('[data-i18n-ph]').forEach(function (el) {
       el.setAttribute('placeholder', GW.lang.t(el.getAttribute('data-i18n-ph')));
     });
+    document.querySelectorAll('[data-i18n-tip]').forEach(function (el) {
+      el.setAttribute('data-tip', GW.lang.t(el.getAttribute('data-i18n-tip')));
+    });
     document.querySelectorAll('[data-i18n-aria]').forEach(function (el) {
       el.setAttribute('aria-label', GW.lang.t(el.getAttribute('data-i18n-aria')));
     });
@@ -368,6 +612,9 @@
 
     document.dispatchEvent(new CustomEvent('gw:lang', { detail: { lang: current } }));
   }
+
+  // Re-apply the current language, e.g. after a page adds its own strings to GW.STR
+  GW.lang.refresh = apply;
 
   document.addEventListener('click', function (e) {
     var btn = e.target.closest && e.target.closest('[data-lang-btn]');

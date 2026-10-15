@@ -11,7 +11,7 @@
 
    Rules from the plan: null is shown as "Awaiting report", never 0; every reading shows its time
    (already Thai time, never converted); dam data is labelled as daily; the risk score is a
-   model estimate, not a probability or an official warning. When the backend cannot be reached,
+   level from a simple rule (B2), not a percentage, an AI model or an official warning. When the backend cannot be reached,
    snapshots from /sample are shown and the page says so. */
 
 (function (GW) {
@@ -150,10 +150,8 @@
     var meta = RISK[r.level] || RISK.none;
 
     var row = h('div', 'risk-card__row');
+    // A level from rule B2, not a probability: no percentage is shown (risk_percent is only 0, 33, 67 or 100)
     row.appendChild(h('p', 'risk-card__level lv-' + meta.tone, levelLabel(r.level)));
-    if (r.risk_percent !== null && r.risk_percent !== undefined) {
-      row.appendChild(h('p', 'risk-card__pct', fmtNum(r.risk_percent, 0) + '%'));
-    }
     card.appendChild(row);
     card.appendChild(h('p', 'risk-card__desc', L.t('risk.desc.' + r.level)));
 
@@ -163,6 +161,7 @@
     card.appendChild(scale);
 
     card.appendChild(h('p', 'risk-card__meta', L.t('risk.target')));
+    card.appendChild(h('p', 'risk-card__meta', L.t('risk.how')));
     var ay = findStation(data.river, STATION_AYUTTHAYA);
     if (ay && ay.water_level !== null && ay.bank !== null) {
       card.appendChild(h('p', 'risk-card__meta', L.t('risk.reading', { wl: fmtNum(ay.water_level, 2), bank: fmtNum(ay.bank, 2) })));
@@ -478,6 +477,7 @@
         data[key] = res.data;
         modes[key] = res.mode;
         errors[key] = null;
+        if (res.mode === 'live') GW.pulse();
       }, function (err) {
         if (key === 'risk' && err.status === 503) {
           data.risk = null;          // the backend answered: no recent data to assess

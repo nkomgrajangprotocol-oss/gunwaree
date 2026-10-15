@@ -8,20 +8,71 @@
   <meta name="theme-color" content="#0A303A">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <script>
-    // Arriving through the intro warp: fade in from the white the warp ends on
-    try {
-      if (sessionStorage.getItem('gw_warp')) {
-        sessionStorage.removeItem('gw_warp');
-        document.documentElement.classList.add('is-arriving-sky');
-      }
-    } catch (e) { /* storage blocked */ }
+    (function () {
+      // Before the first paint: sidebar size, the arrival fade from the intro, and the page transition
+      var d = document.documentElement;
+      // Who may see this page, decided before anything is drawn: admin accounts only get the admin pages,
+      // and only admin accounts get them. The scripts check again once they load.
+      try {
+        var raw = localStorage.getItem('gw_session') || sessionStorage.getItem('gw_session');
+        var who = raw ? JSON.parse(raw) : null;
+        if (who && !(who.token && Date.now() <= who.expires_at)) who = null;
+        var isAdmin = !!(who && who.role === 'admin');
+        if (d.getAttribute('data-area') === 'admin') {
+          if (!isAdmin) {
+            location.replace(who ? 'home.html' : 'login.html?next=' + encodeURIComponent((location.pathname.split('/').pop() || 'admin.html') + location.hash));
+            return;
+          }
+        } else if (isAdmin) {
+          location.replace('admin.html');
+          return;
+        }
+      } catch (e) { /* storage blocked: the page scripts check again */ }
+      try {
+        var sb = localStorage.getItem('gw_sidebar');
+        if (sb === 'mini' || (!sb && window.innerWidth < 1180)) d.classList.add('sb-mini');
+      } catch (e) { /* storage blocked */ }
+      try {
+        if (sessionStorage.getItem('gw_warp')) { sessionStorage.removeItem('gw_warp'); d.classList.add('is-arriving-sky'); }
+      } catch (e) { /* storage blocked */ }
+      d.classList.add('no-page-anim');   // Rescue reports opens instantly: no page animation
+      // Heavy work (the WebGL maps) waits for this, so it never stutters the page transition
+      window.gwRevealed = new Promise(function (done) {
+        if (!('onpagereveal' in window)) { done(); return; }
+        window.addEventListener('pagereveal', function (e) {
+          if (e.viewTransition) e.viewTransition.finished.then(done, done); else done();
+        }, { once: true });
+        setTimeout(done, 2500);
+      });
+      // The new page is revealed as a ripple spreading from the menu item that was clicked
+      window.addEventListener('pagereveal', function (e) {
+        var o = null;
+        try { o = JSON.parse(sessionStorage.getItem('gw_vt') || 'null'); sessionStorage.removeItem('gw_vt'); } catch (err) { o = null; }
+        // A transition the browser skips (for example after a fast second click) is not an error
+        if (e.viewTransition) { e.viewTransition.ready.catch(function () {}); e.viewTransition.finished.catch(function () {}); }
+        if (!e.viewTransition || !o || d.classList.contains('no-page-anim')) return;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        e.viewTransition.ready.then(function () {
+          var c = document.querySelector('.content');
+          if (!c) return;
+          var r = c.getBoundingClientRect();
+          var x = o.x - r.left, y = o.y - r.top;
+          var h = Math.min(r.height, window.innerHeight - r.top);
+          var rad = Math.hypot(Math.max(x, r.width - x), Math.max(y, h - y)) + 40;
+          d.animate({ clipPath: ['circle(0px at ' + x + 'px ' + y + 'px)', 'circle(' + rad + 'px at ' + x + 'px ' + y + 'px)'] },
+            { duration: 820, easing: 'cubic-bezier(0.7, 0, 0.2, 1)', fill: 'both', pseudoElement: '::view-transition-new(page)' });
+        }, function () { /* transition skipped */ });
+      });
+    })();
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/app.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.css">
+  <link rel="stylesheet" href="css/style.css?v=20261016b">
+  <link rel="stylesheet" href="css/app.css?v=20261016b">
+  <script type="speculationrules">{"prefetch": [{"where": {"selector_matches": ".nav a[href$='.html'], .tabbar a[href$='.html'], .sheet a[href$='.html']"}, "eagerness": "moderate"}]}</script>
 </head>
 <body class="app">
 
@@ -31,73 +82,47 @@
       <source src="assets/video/sky-blue-1080p.mp4" type="video/mp4">
     </video>
     <canvas class="sky__rain" data-sky-rain></canvas>
-    <div class="sky__shade"></div>
   </div>
 
   <div class="app-shell">
-
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <a class="logo" href="index.html" aria-label="GunWaree">
-        <svg viewBox="0 0 24 30" aria-hidden="true">
-          <defs><clipPath id="logo-drop"><path d="M12 1.5C9.1 5.8 3.6 11.9 3.6 17.9a8.4 8.4 0 0 0 16.8 0c0-6-5.5-12.1-8.4-16.4Z"/></clipPath></defs>
-          <g clip-path="url(#logo-drop)">
-            <rect width="24" height="30" fill="#C4F7F2"/>
-            <path d="M0 18.6c3-2.3 6-2.3 9 0s6 2.3 9 0 6-2.3 9 0V30H0Z" fill="#7CEBE3"/>
-            <path d="M0 18.6c3-2.3 6-2.3 9 0s6 2.3 9 0 6-2.3 9 0" fill="none" stroke="#0A303A" stroke-width="1.7"/>
-          </g>
-        </svg>
-        <span>GunWaree</span>
-      </a>
-
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__top">
+        <a class="sidebar__brand" href="home.html" data-nav="brand" aria-label="GunWaree"><svg viewBox="0 0 24 30" aria-hidden="true"><defs><clipPath id="logo-side"><path d="M12 1.5C9.1 5.8 3.6 11.9 3.6 17.9a8.4 8.4 0 0 0 16.8 0c0-6-5.5-12.1-8.4-16.4Z"/></clipPath></defs><g clip-path="url(#logo-side)"><rect width="24" height="30" fill="#C4F7F2"/><path class="logo__water" d="M-12 18.6c3-2.3 6-2.3 9 0s6 2.3 9 0 6-2.3 9 0 6 2.3 9 0 6-2.3 9 0V30H-12Z" fill="#7CEBE3"/><path d="M0 18.6c3-2.3 6-2.3 9 0s6 2.3 9 0 6-2.3 9 0" fill="none" stroke="#0A303A" stroke-width="1.7"/></g></svg><span class="sidebar__word">GunWaree</span></a>
+        <button class="sb-toggle" type="button" data-sb-toggle aria-controls="sidebar" aria-expanded="true" data-i18n-tip="sb.collapse">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="13" rx="2.5"/><path d="M7.5 3.5v13"/><path class="sb-toggle__arrow" d="M13.2 8 11.2 10l2 2"/></svg>
+          <span class="visually-hidden" data-sb-toggle-label data-i18n="sb.collapse">Collapse sidebar</span>
+        </button>
+      </div>
+      <div class="sidebar__account">
+        <button class="account" type="button" data-account aria-haspopup="true" aria-expanded="false" data-i18n-tip="account.label"></button>
+      </div>
+      <div class="sidebar__rule" aria-hidden="true"></div>
       <nav class="nav" data-i18n-aria="nav.label" aria-label="Main menu">
-        <p class="nav__eyebrow eyebrow" data-i18n="nav.label">Main menu</p>
-        <ul role="list">
-          <li>
-            <a class="nav__item" href="home.html">
-              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.2 10 3.5l7 5.7V16a1 1 0 0 1-1 1h-3.5v-4.5h-5V17H4a1 1 0 0 1-1-1Z"/></svg>
-              <span data-i18n="nav.home">Home</span>
-            </a>
-          </li>
-          <li>
-            <span class="nav__item is-soon" aria-disabled="true">
-              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 16h14"/><path d="M4 12.5 7.5 9l3 2.5L16 5.5"/><path d="M12.5 5.5H16V9"/></svg>
-              <span data-i18n="nav.risk">Risk prediction</span>
-              <span class="nav__soon" data-i18n="nav.soon">Soon</span>
-            </span>
-          </li>
-          <li>
-            <a class="nav__item is-active" href="reports.html" aria-current="page">
-              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="12" height="14" rx="1.5"/><path d="M7.5 3.5V2.5h5v1"/><path d="M10 8v5M7.5 10.5h5"/></svg>
-              <span data-i18n="nav.reports">Rescue reports</span>
-            </a>
-          </li>
-          <li>
-            <a class="nav__item" href="dams.html">
-              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h4l2 12H3Z"/><path d="M9.2 7.5H17M9.8 11H17M10.3 14.5H17"/></svg>
-              <span data-i18n="nav.dams">Dam levels</span>
-            </a>
+        <p class="nav__eyebrow" data-i18n="nav.menu">Menu</p>
+        <ul class="nav__list" role="list">
+          <li><a class="nav__item" href="home.html" data-nav="home" data-i18n-tip="nav.home" style="--i:0"><svg class="ic ic-home" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="ic-roof" d="M2.6 9.4 10 3.4l7.4 6"/><path d="M4.5 8.2v8a.8.8 0 0 0 .8.8h9.4a.8.8 0 0 0 .8-.8v-8"/><path class="ic-door" d="M8.4 17v-4.2h3.2V17"/></svg><span class="nav__label" data-i18n="nav.home">Home</span></a></li>
+          <li><a class="nav__item" href="risk.html" data-nav="risk" data-i18n-tip="nav.risk" style="--i:1"><svg class="ic ic-risk" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 16.5h14"/><path class="ic-line" d="M4 12.5 7.5 9l3 2.5L16 5.5"/><path class="ic-arrow" d="M12.5 5.5H16V9"/></svg><span class="nav__label" data-i18n="nav.risk">Risk prediction</span></a></li>
+          <li><a class="nav__item is-active" href="reports.html" aria-current="page" data-nav="reports" data-i18n-tip="nav.reports" style="--i:2"><span class="nav__pill" aria-hidden="true"></span><svg class="ic ic-report" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g class="ic-board"><rect x="4" y="3.5" width="12" height="14" rx="1.5"/><path d="M7.5 3.5V2.5h5v1"/></g><path class="ic-plus" d="M10 8v5M7.5 10.5h5"/></svg><span class="nav__label" data-i18n="nav.reports">Rescue reports</span></a></li>
+          <li class="nav__group" data-group>
+            <button class="nav__item nav__item--group" type="button" data-group-toggle aria-expanded="false" aria-controls="nav-levels" data-i18n-tip="nav.levels" style="--i:3"><svg class="ic ic-levels" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3v14M4 6h2.4M4 10h2.4M4 14h2.4"/><path class="ic-wave" d="M8.6 10.5c1.2-1 2.5-1 3.7 0s2.5 1 3.7 0"/><path class="ic-wave ic-wave--2" d="M8.6 14.5c1.2-1 2.5-1 3.7 0s2.5 1 3.7 0"/></svg><span class="nav__label" data-i18n="nav.levels">Levels</span><svg class="nav__chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5l3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <div class="nav__sub" id="nav-levels">
+              <ul role="list">
+                <li><a class="nav__item nav__item--sub" href="dams.html" data-nav="dams" data-i18n-tip="nav.dams" style="--i:4"><svg class="ic ic-dam" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h4l2 12H3Z"/><path class="ic-flow" d="M10.2 7.5H17M10.8 11H17M11.3 14.5H17"/></svg><span class="nav__label" data-i18n="nav.dams">Dam levels</span></a></li>
+                <li><a class="nav__item nav__item--sub" href="water.html" data-nav="water" data-i18n-tip="nav.water" style="--i:5"><svg class="ic ic-water" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2.8c-2.4 3.4-5 6.4-5 9.2a5 5 0 0 0 10 0c0-2.8-2.6-5.8-5-9.2Z"/><path class="ic-fill" d="M6.3 12.4c1.2-.9 2.5-.9 3.7 0s2.5.9 3.7 0"/></svg><span class="nav__label" data-i18n="nav.water">Water levels</span></a></li>
+              </ul>
+            </div>
           </li>
         </ul>
+        <div class="sidebar__rule" aria-hidden="true"></div>
+        <ul class="nav__list" role="list">
+          <li><a class="nav__item nav__item--sos" href="tel:1669" data-i18n-tip="nav.sos" style="--i:6"><svg class="ic ic-phone" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5 8 7 6.2 8.3a9 9 0 0 0 5.5 5.5L13 12l3.5 1.5V16a1.5 1.5 0 0 1-1.5 1.5A12.5 12.5 0 0 1 2.5 5 1.5 1.5 0 0 1 4 3.5Z"/></svg><span class="nav__label" data-i18n="nav.sos">Emergency 1669</span></a></li>
+        </ul>
       </nav>
-
-      <div class="profile" data-profile></div>
     </aside>
 
-    <!-- Main column -->
     <div class="app-main">
       <header class="topbar">
-        <a class="logo topbar__brand" href="index.html" aria-label="GunWaree">
-          <svg viewBox="0 0 24 30" aria-hidden="true">
-            <defs><clipPath id="logo-drop-top"><path d="M12 1.5C9.1 5.8 3.6 11.9 3.6 17.9a8.4 8.4 0 0 0 16.8 0c0-6-5.5-12.1-8.4-16.4Z"/></clipPath></defs>
-            <g clip-path="url(#logo-drop-top)">
-              <rect width="24" height="30" fill="#C4F7F2"/>
-              <path d="M0 18.6c3-2.3 6-2.3 9 0s6 2.3 9 0 6-2.3 9 0V30H0Z" fill="#7CEBE3"/>
-              <path d="M0 18.6c3-2.3 6-2.3 9 0s6 2.3 9 0 6-2.3 9 0" fill="none" stroke="#0A303A" stroke-width="1.7"/>
-            </g>
-          </svg>
-          <span>GunWaree</span>
-        </a>
+        <a class="logo topbar__brand" href="home.html" data-nav="brand" aria-label="GunWaree"><svg viewBox="0 0 24 30" aria-hidden="true"><defs><clipPath id="logo-top"><path d="M12 1.5C9.1 5.8 3.6 11.9 3.6 17.9a8.4 8.4 0 0 0 16.8 0c0-6-5.5-12.1-8.4-16.4Z"/></clipPath></defs><g clip-path="url(#logo-top)"><rect width="24" height="30" fill="#C4F7F2"/><path class="logo__water" d="M-12 18.6c3-2.3 6-2.3 9 0s6 2.3 9 0 6-2.3 9 0 6 2.3 9 0 6-2.3 9 0V30H-12Z" fill="#7CEBE3"/><path d="M0 18.6c3-2.3 6-2.3 9 0s6 2.3 9 0 6-2.3 9 0" fill="none" stroke="#0A303A" stroke-width="1.7"/></g></svg><span>GunWaree</span></a>
         <p class="topbar__place">
           <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M9 16s5-4.6 5-8.6A5 5 0 0 0 4 7.4C4 11.4 9 16 9 16Z"/><circle cx="9" cy="7.3" r="1.8"/></svg>
           <span data-i18n="top.location">Bangkok, Thailand</span>
@@ -112,7 +137,7 @@
 
           <div class="bell">
             <button class="bell__btn" type="button" aria-expanded="false" aria-controls="bell-panel" data-bell data-i18n-aria="bell.label" aria-label="Alerts">
-              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M5 8.5a5 5 0 0 1 10 0c0 3.8 1.5 5.2 1.5 5.2h-13S5 12.3 5 8.5Z"/><path d="M8.3 16.2a1.8 1.8 0 0 0 3.4 0" stroke-linecap="round"/></svg>
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><g class="bell__body"><path d="M5 8.5a5 5 0 0 1 10 0c0 3.8 1.5 5.2 1.5 5.2h-13S5 12.3 5 8.5Z"/></g><path class="bell__clapper" d="M8.3 16.2a1.8 1.8 0 0 0 3.4 0" stroke-linecap="round"/></svg>
               <span class="bell__count" data-bell-count hidden></span>
             </button>
             <div class="bell__panel" id="bell-panel" data-bell-panel hidden>
@@ -120,6 +145,8 @@
               <div data-bell-body></div>
             </div>
           </div>
+
+          <button class="topbar__account" type="button" data-account data-compact aria-haspopup="true" aria-expanded="false" data-i18n-aria="account.label" aria-label="Account"></button>
         </div>
       </header>
 
@@ -274,37 +301,35 @@
         </ul>
         <p data-i18n="legal.notice">Hackathon prototype, not an official flood warning. In an emergency call 191 or 1669.</p>
         <p data-i18n="legal.credits">Data: Bangkok Drainage and Sewerage Office via POPNIX Flood, ThaiWater / HII, Open-Meteo (CC BY 4.0), Royal Irrigation Department.</p>
-        <p data-i18n="legal.media">Sky video: Miguel Á. Padriñán. Bangkok photo: Pexels.</p>
+        <p><span data-i18n="legal.media">Sky video: Miguel Á. Padriñán. Bangkok photo: Pexels.</span> <span data-map-credit>Maps: <a href="https://openfreemap.org" rel="noopener">OpenFreeMap</a>, &copy; <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> contributors.</span></p>
       </footer>
     </div>
   </div>
 
-  <!-- Bottom tabs on small screens -->
   <nav class="tabbar" data-i18n-aria="nav.label" aria-label="Main menu">
-    <a class="nav__item" href="home.html">
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.2 10 3.5l7 5.7V16a1 1 0 0 1-1 1h-3.5v-4.5h-5V17H4a1 1 0 0 1-1-1Z"/></svg>
-      <span data-i18n="nav.home">Home</span>
-    </a>
-    <span class="nav__item is-soon" aria-disabled="true">
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 16h14"/><path d="M4 12.5 7.5 9l3 2.5L16 5.5"/><path d="M12.5 5.5H16V9"/></svg>
-      <span data-i18n="nav.risk">Risk prediction</span>
-    </span>
-    <a class="nav__item is-active" href="reports.html" aria-current="page">
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="12" height="14" rx="1.5"/><path d="M7.5 3.5V2.5h5v1"/><path d="M10 8v5M7.5 10.5h5"/></svg>
-      <span data-i18n="nav.reports">Rescue reports</span>
-    </a>
-    <a class="nav__item" href="dams.html">
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h4l2 12H3Z"/><path d="M9.2 7.5H17M9.8 11H17M10.3 14.5H17"/></svg>
-      <span data-i18n="nav.dams">Dam levels</span>
-    </a>
+    <a class="tab" href="home.html" data-nav="home"><svg class="ic ic-home" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="ic-roof" d="M2.6 9.4 10 3.4l7.4 6"/><path d="M4.5 8.2v8a.8.8 0 0 0 .8.8h9.4a.8.8 0 0 0 .8-.8v-8"/><path class="ic-door" d="M8.4 17v-4.2h3.2V17"/></svg><span data-i18n="nav.home">Home</span></a>
+    <a class="tab" href="risk.html" data-nav="risk"><svg class="ic ic-risk" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 16.5h14"/><path class="ic-line" d="M4 12.5 7.5 9l3 2.5L16 5.5"/><path class="ic-arrow" d="M12.5 5.5H16V9"/></svg><span data-i18n="nav.risk">Risk prediction</span></a>
+    <a class="tab is-active" href="reports.html" aria-current="page" data-nav="reports"><span class="tab__pill" aria-hidden="true"></span><svg class="ic ic-report" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g class="ic-board"><rect x="4" y="3.5" width="12" height="14" rx="1.5"/><path d="M7.5 3.5V2.5h5v1"/></g><path class="ic-plus" d="M10 8v5M7.5 10.5h5"/></svg><span data-i18n="nav.reports">Rescue reports</span></a>
+    <button class="tab" type="button" data-sheet-toggle aria-expanded="false" aria-controls="levels-sheet"><svg class="ic ic-levels" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3v14M4 6h2.4M4 10h2.4M4 14h2.4"/><path class="ic-wave" d="M8.6 10.5c1.2-1 2.5-1 3.7 0s2.5 1 3.7 0"/><path class="ic-wave ic-wave--2" d="M8.6 14.5c1.2-1 2.5-1 3.7 0s2.5 1 3.7 0"/></svg><span data-i18n="nav.levels">Levels</span></button>
   </nav>
 
-  <script src="js/lang.js"></script>
-  <script src="js/i18n.js" defer></script>
-  <script src="js/api.js" defer></script>
-  <script src="js/shell.js" defer></script>
-  <script src="js/sky.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" defer></script>
-  <script src="js/reports.js" defer></script>
+  <!-- Levels: the two choices slide up from the tab bar on small screens -->
+  <div class="sheet" id="levels-sheet" data-sheet hidden>
+    <div class="sheet__scrim" data-sheet-close></div>
+    <div class="sheet__panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <p class="sheet__title" id="sheet-title" data-i18n="nav.levels">Levels</p>
+      <a class="sheet__item" href="dams.html" data-nav="dams"><svg class="ic ic-dam" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h4l2 12H3Z"/><path class="ic-flow" d="M10.2 7.5H17M10.8 11H17M11.3 14.5H17"/></svg><span><span class="sheet__name" data-i18n="nav.dams">Dam levels</span><span class="sheet__sub" data-i18n="nav.damsSub">The 4 main dams and the Chao Phraya dam</span></span></a>
+      <a class="sheet__item" href="water.html" data-nav="water"><svg class="ic ic-water" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2.8c-2.4 3.4-5 6.4-5 9.2a5 5 0 0 0 10 0c0-2.8-2.6-5.8-5-9.2Z"/><path class="ic-fill" d="M6.3 12.4c1.2-.9 2.5-.9 3.7 0s2.5.9 3.7 0"/></svg><span><span class="sheet__name" data-i18n="nav.water">Water levels</span><span class="sheet__sub" data-i18n="nav.waterSub">Rivers, canals and road flooding in Bangkok</span></span></a>
+    </div>
+  </div>
+
+  <script src="js/lang.js?v=20261016b"></script>
+  <script src="js/i18n.js?v=20261016b" defer></script>
+  <script src="js/api.js?v=20261016b" defer></script>
+  <script src="js/shell.js?v=20261016b" defer></script>
+  <script src="js/sky.js?v=20261016b" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.js" defer></script>
+  <script src="js/maps.js?v=20261016b" defer></script>
+  <script src="js/reports.js?v=20261016b" defer></script>
 </body>
 </html>

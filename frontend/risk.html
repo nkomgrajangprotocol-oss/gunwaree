@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Risk prediction · GunWaree</title>
+  <meta name="description" content="Flood risk level for the Chao Phraya at Ayutthaya over the next 24 hours, and how it is worked out. ระดับความเสี่ยงน้ำล้นตลิ่งที่อยุธยาใน 24 ชั่วโมง">
+  <meta name="theme-color" content="#0A303A">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <script>
+    (function () {
+      // Before the first paint: sidebar size, the arrival fade from the intro, and the page transition
+      var d = document.documentElement;
+      // Who may see this page, decided before anything is drawn: admin accounts only get the admin pages,
+      // and only admin accounts get them. The scripts check again once they load.
+      try {
+        var raw = localStorage.getItem('gw_session') || sessionStorage.getItem('gw_session');
+        var who = raw ? JSON.parse(raw) : null;
+        if (who && !(who.token && Date.now() <= who.expires_at)) who = null;
+        var isAdmin = !!(who && who.role === 'admin');
+        if (d.getAttribute('data-area') === 'admin') {
+          if (!isAdmin) {
+            location.replace(who ? 'home.html' : 'login.html?next=' + encodeURIComponent((location.pathname.split('/').pop() || 'admin.html') + location.hash));
+            return;
+          }
+        } else if (isAdmin) {
+          location.replace('admin.html');
+          return;
+        }
+      } catch (e) { /* storage blocked: the page scripts check again */ }
+      try {
+        var sb = localStorage.getItem('gw_sidebar');
+        if (sb === 'mini' || (!sb && window.innerWidth < 1180)) d.classList.add('sb-mini');
+      } catch (e) { /* storage blocked */ }
+      try {
+        if (sessionStorage.getItem('gw_warp')) { sessionStorage.removeItem('gw_warp'); d.classList.add('is-arriving-sky'); }
+      } catch (e) { /* storage blocked */ }
+      // Heavy work (the WebGL maps) waits for this, so it never stutters the page transition
+      window.gwRevealed = new Promise(function (done) {
+        if (!('onpagereveal' in window)) { done(); return; }
+        window.addEventListener('pagereveal', function (e) {
+          if (e.viewTransition) e.viewTransition.finished.then(done, done); else done();
+        }, { once: true });
+        setTimeout(done, 2500);
+      });
+      // The new page is revealed as a ripple spreading from the menu item that was clicked
+      window.addEventListener('pagereveal', function (e) {
+        var o = null;
+        try { o = JSON.parse(sessionStorage.getItem('gw_vt') || 'null'); sessionStorage.removeItem('gw_vt'); } catch (err) { o = null; }
+        // A transition the browser skips (for example after a fast second click) is not an error
+        if (e.viewTransition) { e.viewTransition.ready.catch(function () {}); e.viewTransition.finished.catch(function () {}); }
+        if (!e.viewTransition || !o || d.classList.contains('no-page-anim')) return;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        e.viewTransition.ready.then(function () {
+          var c = document.querySelector('.content');
+          if (!c) return;
+          var r = c.getBoundingClientRect();
+          var x = o.x - r.left, y = o.y - r.top;
+          var h = Math.min(r.height, window.innerHeight - r.top);
+          var rad = Math.hypot(Math.max(x, r.width - x), Math.max(y, h - y)) + 40;
+          d.animate({ clipPath: ['circle(0px at ' + x + 'px ' + y + 'px)', 'circle(' + rad + 'px at ' + x + 'px ' + y + 'px)'] },
+            { duration: 820, easing: 'cubic-bezier(0.7, 0, 0.2, 1)', fill: 'both', pseudoElement: '::view-transition-new(page)' });
+        }, function () { /* transition skipped */ });
+      });
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="css/style.css?v=20261016b">
+  <link rel="stylesheet" href="css/app.css?v=20261016b">
+  <script type="speculationrules">{"prefetch": [{"where": {"selector_matches": ".nav a[href$='.html'], .tabbar a[href$='.html'], .sheet a[href$='.html']"}, "eagerness": "moderate"}]}</script>
+</head>
+<body class="app">
+
+  <!-- Background: bright blue sky with white clouds (Miguel Á. Padriñán, Pexels) with falling rain drawn by js/sky.js -->
+  <div class="sky" aria-hidden="true">
+    <video class="sky__video" data-sky-video autoplay muted loop playsinline preload="auto" poster="assets/img/sky-blue-poster.jpg">
+      <source src="assets/video/sky-blue-1080p.mp4" type="video/mp4">
+    </video>
+    <canvas class="sky__rain" data-sky-rain></canvas>
+  </div>
+
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__top">
+        <a class="sidebar__brand" href="home.html" data-nav="brand" aria-label="GunWaree"><svg viewBox="0 0 24 30" aria-hidden="true"><defs><clipPath id="logo-side"><path d="M12 1.5C9.1 5.8 3.6 11.9 3.6 17.9a8.4 8.4 0 0 0 16.8 0c0-6-5.5-12.1-8.4-16.4Z"/></clipPath></defs><g clip-path="url(#logo-side)"><rect width="24" height="30" fill="#C4F7F2"/><path class="logo__water" d="M-12 18.6c3-2.3 6-2.3 9 0s6 2.3 9 0 6-2.3 9 0 6 2.3 9 0 6-2.3 9 0V30H-12Z" fill="#7CEBE3"/><path d="M0 18.6c3-2.3 6-2.3 9 0s6 2.3 9 0 6-2.3 9 0" fill="none" stroke="#0A303A" stroke-width="1.7"/></g></svg><span class="sidebar__word">GunWaree</span></a>
+        <button class="sb-toggle" type="button" data-sb-toggle aria-controls="sidebar" aria-expanded="true" data-i18n-tip="sb.collapse">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="13" rx="2.5"/><path d="M7.5 3.5v13"/><path class="sb-toggle__arrow" d="M13.2 8 11.2 10l2 2"/></svg>
+          <span class="visually-hidden" data-sb-toggle-label data-i18n="sb.collapse">Collapse sidebar</span>
+        </button>
+      </div>
+      <div class="sidebar__account">
+        <button class="account" type="button" data-account aria-haspopup="true" aria-expanded="false" data-i18n-tip="account.label"></button>
+      </div>
+      <div class="sidebar__rule" aria-hidden="true"></div>
+      <nav class="nav" data-i18n-aria="nav.label" aria-label="Main menu">
+        <p class="nav__eyebrow" data-i18n="nav.menu">Menu</p>
+        <ul class="nav__list" role="list">
+          <li><a class="nav__item" href="home.html" data-nav="home" data-i18n-tip="nav.home" style="--i:0"><svg class="ic ic-home" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="ic-roof" d="M2.6 9.4 10 3.4l7.4 6"/><path d="M4.5 8.2v8a.8.8 0 0 0 .8.8h9.4a.8.8 0 0 0 .8-.8v-8"/><path class="ic-door" d="M8.4 17v-4.2h3.2V17"/></svg><span class="nav__label" data-i18n="nav.home">Home</span></a></li>
+          <li><a class="nav__item is-active" href="risk.html" aria-current="page" data-nav="risk" data-i18n-tip="nav.risk" style="--i:1"><span class="nav__pill" aria-hidden="true"></span><svg class="ic ic-risk" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 16.5h14"/><path class="ic-line" d="M4 12.5 7.5 9l3 2.5L16 5.5"/><path class="ic-arrow" d="M12.5 5.5H16V9"/></svg><span class="nav__label" data-i18n="nav.risk">Risk prediction</span></a></li>
+          <li><a class="nav__item" href="reports.html" data-nav="reports" data-i18n-tip="nav.reports" style="--i:2"><svg class="ic ic-report" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g class="ic-board"><rect x="4" y="3.5" width="12" height="14" rx="1.5"/><path d="M7.5 3.5V2.5h5v1"/></g><path class="ic-plus" d="M10 8v5M7.5 10.5h5"/></svg><span class="nav__label" data-i18n="nav.reports">Rescue reports</span></a></li>
+          <li class="nav__group" data-group>
+            <button class="nav__item nav__item--group" type="button" data-group-toggle aria-expanded="false" aria-controls="nav-levels" data-i18n-tip="nav.levels" style="--i:3"><svg class="ic ic-levels" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3v14M4 6h2.4M4 10h2.4M4 14h2.4"/><path class="ic-wave" d="M8.6 10.5c1.2-1 2.5-1 3.7 0s2.5 1 3.7 0"/><path class="ic-wave ic-wave--2" d="M8.6 14.5c1.2-1 2.5-1 3.7 0s2.5 1 3.7 0"/></svg><span class="nav__label" data-i18n="nav.levels">Levels</span><svg class="nav__chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5l3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <div class="nav__sub" id="nav-levels">
+              <ul role="list">
+                <li><a class="nav__item nav__item--sub" href="dams.html" data-nav="dams" data-i18n-tip="nav.dams" style="--i:4"><svg class="ic ic-dam" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h4l2 12H3Z"/><path class="ic-flow" d="M10.2 7.5H17M10.8 11H17M11.3 14.5H17"/></svg><span class="nav__label" data-i18n="nav.dams">Dam levels</span></a></li>
+                <li><a class="nav__item nav__item--sub" href="water.html" data-nav="water" data-i18n-tip="nav.water" style="--i:5"><svg class="ic ic-water" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2.8c-2.4 3.4-5 6.4-5 9.2a5 5 0 0 0 10 0c0-2.8-2.6-5.8-5-9.2Z"/><path class="ic-fill" d="M6.3 12.4c1.2-.9 2.5-.9 3.7 0s2.5.9 3.7 0"/></svg><span class="nav__label" data-i18n="nav.water">Water levels</span></a></li>
+              </ul>
+            </div>
+          </li>
+        </ul>
+        <div class="sidebar__rule" aria-hidden="true"></div>
+        <ul class="nav__list" role="list">
+          <li><a class="nav__item nav__item--sos" href="tel:1669" data-i18n-tip="nav.sos" style="--i:6"><svg class="ic ic-phone" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5 8 7 6.2 8.3a9 9 0 0 0 5.5 5.5L13 12l3.5 1.5V16a1.5 1.5 0 0 1-1.5 1.5A12.5 12.5 0 0 1 2.5 5 1.5 1.5 0 0 1 4 3.5Z"/></svg><span class="nav__label" data-i18n="nav.sos">Emergency 1669</span></a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <div class="app-main">
+      <header class="topbar">
+        <a class="logo topbar__brand" href="home.html" data-nav="brand" aria-label="GunWaree"><svg viewBox="0 0 24 30" aria-hidden="true"><defs><clipPath id="logo-top"><path d="M12 1.5C9.1 5.8 3.6 11.9 3.6 17.9a8.4 8.4 0 0 0 16.8 0c0-6-5.5-12.1-8.4-16.4Z"/></clipPath></defs><g clip-path="url(#logo-top)"><rect width="24" height="30" fill="#C4F7F2"/><path class="logo__water" d="M-12 18.6c3-2.3 6-2.3 9 0s6 2.3 9 0 6-2.3 9 0 6 2.3 9 0 6-2.3 9 0V30H-12Z" fill="#7CEBE3"/><path d="M0 18.6c3-2.3 6-2.3 9 0s6 2.3 9 0 6-2.3 9 0" fill="none" stroke="#0A303A" stroke-width="1.7"/></g></svg><span>GunWaree</span></a>
+        <p class="topbar__place">
+          <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M9 16s5-4.6 5-8.6A5 5 0 0 0 4 7.4C4 11.4 9 16 9 16Z"/><circle cx="9" cy="7.3" r="1.8"/></svg>
+          <span data-i18n="top.location">Bangkok, Thailand</span>
+        </p>
+        <p class="data-status" data-status aria-live="polite"></p>
+
+        <div class="topbar__actions">
+          <div class="lang-switch" role="group" data-i18n-aria="lang.label" aria-label="Language">
+            <button type="button" data-lang-btn="th" lang="th" aria-pressed="false">TH</button>
+            <button type="button" data-lang-btn="en" lang="en" aria-pressed="true">EN</button>
+          </div>
+
+          <div class="bell">
+            <button class="bell__btn" type="button" aria-expanded="false" aria-controls="bell-panel" data-bell data-i18n-aria="bell.label" aria-label="Alerts">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><g class="bell__body"><path d="M5 8.5a5 5 0 0 1 10 0c0 3.8 1.5 5.2 1.5 5.2h-13S5 12.3 5 8.5Z"/></g><path class="bell__clapper" d="M8.3 16.2a1.8 1.8 0 0 0 3.4 0" stroke-linecap="round"/></svg>
+              <span class="bell__count" data-bell-count hidden></span>
+            </button>
+            <div class="bell__panel" id="bell-panel" data-bell-panel hidden>
+              <p class="bell__title" data-i18n="bell.title">Flood alerts</p>
+              <div data-bell-body></div>
+            </div>
+          </div>
+
+          <button class="topbar__account" type="button" data-account data-compact aria-haspopup="true" aria-expanded="false" data-i18n-aria="account.label" aria-label="Account"></button>
+        </div>
+      </header>
+
+      <main class="content" id="main" tabindex="-1">
+        <div class="page-head">
+          <h1 data-i18n="rp.title">Risk prediction</h1>
+          <p class="page-head__sub"><span data-i18n="rp.sub">Will the Chao Phraya at Ayutthaya reach its bank within the next 24 hours?</span></p>
+        </div>
+
+        <!-- The level from rule B2: a dial on the left, the river at Ayutthaya in 3D on the right -->
+        <section class="rstage rp-in" data-rstage data-tone="grey" aria-labelledby="rstage-label" style="--d:0">
+          <div class="rstage__aura" aria-hidden="true"></div>
+          <div class="rstage__read" aria-live="polite">
+            <p class="rstage__eyebrow" id="rstage-label" data-i18n="risk.label">Risk level from a simple rule</p>
+            <div class="rdial" aria-hidden="true">
+              <svg class="rdial__svg" viewBox="0 0 220 128">
+                <path class="rdial__track" d="M26 112A84 84 0 0 1 194 112"/>
+                <path class="rdial__seg" data-seg="none" d="M26.03 109.65A84 84 0 0 1 48.97 54.28"/>
+                <path class="rdial__seg" data-seg="watch" d="M52.28 50.97A84 84 0 0 1 107.65 28.03"/>
+                <path class="rdial__seg" data-seg="warning" d="M112.35 28.03A84 84 0 0 1 167.72 50.97"/>
+                <path class="rdial__seg" data-seg="critical" d="M171.03 54.28A84 84 0 0 1 193.97 109.65"/>
+                <g class="rdial__needle" data-needle>
+                  <g class="rdial__wobble">
+                    <line x1="110" y1="112" x2="110" y2="44"/>
+                    <circle class="rdial__tip" cx="110" cy="44" r="5"/>
+                  </g>
+                </g>
+                <circle class="rdial__hub" cx="110" cy="112" r="8"/>
+              </svg>
+              <span class="rdial__base"></span>
+            </div>
+            <p class="rstage__level" data-rlevel></p>
+            <p class="rstage__desc" data-rdesc></p>
+            <dl class="rstage__facts" data-rfacts></dl>
+            <p class="rstage__official"><strong data-i18n="risk.official">Not an official warning</strong> <span data-i18n="rp.official2">Follow guidance from the DDPM and the BMA.</span></p>
+          </div>
+          <div class="rstage__scene">
+            <div class="dio" data-dio aria-hidden="true"></div>
+            <p class="dio__hint" data-i18n="rp.d.hint">Move the pointer over the river to turn it.</p>
+            <p class="visually-hidden" data-dio-text></p>
+          </div>
+        </section>
+
+        <section class="card panel rp-in" style="--d:1" aria-labelledby="rule-title">
+          <div class="panel__head">
+            <div>
+              <h2 id="rule-title" data-i18n="rp.ruleTitle">How the level is decided</h2>
+              <p class="panel__sub" data-i18n="rp.ruleSub">Rule B2 checks the latest reading at Ayutthaya from the top down and stops at the first match.</p>
+            </div>
+          </div>
+          <div class="rladder-wrap">
+            <ol class="rladder" role="list" data-rladder></ol>
+            <div class="rwhy" data-rwhy></div>
+          </div>
+        </section>
+
+        <div class="rgrid">
+          <section class="card panel rp-in" style="--d:2" data-hold aria-labelledby="in-title">
+            <div class="panel__head">
+              <div>
+                <h2 id="in-title" data-i18n="rp.inTitle">What the rule looked at</h2>
+                <p class="panel__sub" data-i18n="rp.inSub">River level at Ayutthaya (station 39), in metres above mean sea level</p>
+              </div>
+            </div>
+            <div data-rinputs>
+              <span class="sk-line sk-line--lg"></span>
+              <span class="sk-line sk-line--md"></span>
+              <span class="sk-line"></span>
+            </div>
+          </section>
+
+          <section class="card panel rp-in" style="--d:3" data-hold aria-labelledby="along-title">
+            <div class="panel__head">
+              <div>
+                <h2 id="along-title" data-i18n="rp.alongTitle">Along the Chao Phraya</h2>
+                <p class="panel__sub" data-i18n="rp.alongSub">North to south. Context only: the rule uses Ayutthaya alone.</p>
+              </div>
+            </div>
+            <ol class="rline" role="list" data-rline>
+              <li class="rstop"><span class="sk-line sk-line--md"></span></li>
+              <li class="rstop"><span class="sk-line sk-line--md"></span></li>
+              <li class="rstop"><span class="sk-line sk-line--sm"></span></li>
+            </ol>
+          </section>
+        </div>
+
+        <section class="card panel rtrack rp-in" style="--d:4" data-rtrack aria-labelledby="track-title">
+          <div class="panel__head">
+            <div>
+              <h2 id="track-title" data-i18n="rp.trackTitle">How it did on past floods</h2>
+              <p class="panel__sub" data-i18n="rp.trackSub">Hours of warning before the river first reached its bank at Ayutthaya</p>
+            </div>
+            <ul class="rtrack__keys" role="list">
+              <li class="rtrack__key rtrack__key--watch" data-i18n="rp.k.watch">Watch or higher</li>
+              <li class="rtrack__key rtrack__key--warning" data-i18n="rp.k.warning">Warning or higher</li>
+              <li class="rtrack__key rtrack__key--late" data-i18n="rp.k.late">Too late</li>
+            </ul>
+          </div>
+          <ol class="rtrack__list" role="list" data-rtrack-list></ol>
+          <div class="rtrack__axis" data-rtrack-axis aria-hidden="true"></div>
+          <p class="rtrack__sum" data-i18n="rp.trackSum">Warned before the bank was reached in 4 of 5 floods at Watch or higher.</p>
+          <p class="dam-scale" data-i18n="rp.trackNote">Only 5 floods reached the bank at Ayutthaya from 2020 to 2025.</p>
+        </section>
+
+        <section class="card panel rlog" data-rlog hidden aria-labelledby="log-title">
+          <div class="panel__head">
+            <div>
+              <h2 id="log-title" data-i18n="rp.logTitle">Recent predictions</h2>
+              <p class="panel__sub" data-i18n="rp.logSub">Admins only. The server stores one row each time the risk is checked.</p>
+            </div>
+          </div>
+          <div data-rlog-body></div>
+        </section>
+
+        <section class="card panel rp-in" style="--d:5" aria-labelledby="lim-title">
+          <div class="panel__head">
+            <div>
+              <h2 id="lim-title" data-i18n="rp.limTitle">What this is, and what it is not</h2>
+            </div>
+          </div>
+          <ul class="rlimits" role="list">
+            <li class="rlim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h6"/><path class="rlim__mark" d="m15 17 2 2 4-4"/></svg><p class="rlim__title" data-i18n="rp.l1t">A rule, not an AI model</p><p class="rlim__text" data-i18n="rp.l1"></p></li>
+            <li class="rlim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="14" width="3.5" height="6" rx="1"/><rect x="8.5" y="10.5" width="3.5" height="9.5" rx="1"/><rect x="14" y="7" width="3.5" height="13" rx="1"/><path class="rlim__mark" d="M19.5 3.5v17"/></svg><p class="rlim__title" data-i18n="rp.l2t">A level, not a probability</p><p class="rlim__text" data-i18n="rp.l2"></p></li>
+            <li class="rlim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s6-5.4 6-10.2A6 6 0 0 0 6 10.8C6 15.6 12 21 12 21Z"/><circle class="rlim__mark" cx="12" cy="10.5" r="2.2"/></svg><p class="rlim__title" data-i18n="rp.l3t">Ayutthaya, not your street</p><p class="rlim__text" data-i18n="rp.l3"></p></li>
+            <li class="rlim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 15h4l2-3 2 3h2"/><path class="rlim__mark" d="m13 15 2.5-11L18 15h3"/></svg><p class="rlim__title" data-i18n="rp.l4t">Odd readings are set aside</p><p class="rlim__text" data-i18n="rp.l4"></p></li>
+            <li class="rlim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path class="rlim__mark" d="M12 7.5V12l3 2"/></svg><p class="rlim__title" data-i18n="rp.l5t">No reading, no guess</p><p class="rlim__text" data-i18n="rp.l5"></p></li>
+            <li class="rlim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18c2.5-2 5-2 7.5 0s5 2 7.5 0"/><path class="rlim__mark" d="M5 12.5 10 8l3 2.5L20 4M16 4h4v4"/></svg><p class="rlim__title" data-i18n="rp.l6t">Fast rises can slip through</p><p class="rlim__text" data-i18n="rp.l6"></p></li>
+          </ul>
+        </section>
+      </main>
+
+      <footer class="app-footer">
+        <ul role="list">
+          <li><a href="terms.html" data-i18n="legal.terms">Terms of Service</a></li>
+          <li><a href="privacy.html" data-i18n="legal.privacy">Privacy Policy</a></li>
+        </ul>
+        <p data-i18n="legal.notice">Hackathon prototype, not an official flood warning. In an emergency call 191 or 1669.</p>
+        <p data-i18n="legal.credits">Data: Bangkok Drainage and Sewerage Office via POPNIX Flood, ThaiWater / HII, Open-Meteo (CC BY 4.0), Royal Irrigation Department.</p>
+        <p><span data-i18n="legal.media">Sky video: Miguel Á. Padriñán. Bangkok photo: Pexels.</span></p>
+      </footer>
+    </div>
+  </div>
+
+  <nav class="tabbar" data-i18n-aria="nav.label" aria-label="Main menu">
+    <a class="tab" href="home.html" data-nav="home"><svg class="ic ic-home" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="ic-roof" d="M2.6 9.4 10 3.4l7.4 6"/><path d="M4.5 8.2v8a.8.8 0 0 0 .8.8h9.4a.8.8 0 0 0 .8-.8v-8"/><path class="ic-door" d="M8.4 17v-4.2h3.2V17"/></svg><span data-i18n="nav.home">Home</span></a>
+    <a class="tab is-active" href="risk.html" aria-current="page" data-nav="risk"><span class="tab__pill" aria-hidden="true"></span><svg class="ic ic-risk" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 16.5h14"/><path class="ic-line" d="M4 12.5 7.5 9l3 2.5L16 5.5"/><path class="ic-arrow" d="M12.5 5.5H16V9"/></svg><span data-i18n="nav.risk">Risk prediction</span></a>
+    <a class="tab" href="reports.html" data-nav="reports"><svg class="ic ic-report" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g class="ic-board"><rect x="4" y="3.5" width="12" height="14" rx="1.5"/><path d="M7.5 3.5V2.5h5v1"/></g><path class="ic-plus" d="M10 8v5M7.5 10.5h5"/></svg><span data-i18n="nav.reports">Rescue reports</span></a>
+    <button class="tab" type="button" data-sheet-toggle aria-expanded="false" aria-controls="levels-sheet"><svg class="ic ic-levels" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3v14M4 6h2.4M4 10h2.4M4 14h2.4"/><path class="ic-wave" d="M8.6 10.5c1.2-1 2.5-1 3.7 0s2.5 1 3.7 0"/><path class="ic-wave ic-wave--2" d="M8.6 14.5c1.2-1 2.5-1 3.7 0s2.5 1 3.7 0"/></svg><span data-i18n="nav.levels">Levels</span></button>
+  </nav>
+
+  <!-- Levels: the two choices slide up from the tab bar on small screens -->
+  <div class="sheet" id="levels-sheet" data-sheet hidden>
+    <div class="sheet__scrim" data-sheet-close></div>
+    <div class="sheet__panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <p class="sheet__title" id="sheet-title" data-i18n="nav.levels">Levels</p>
+      <a class="sheet__item" href="dams.html" data-nav="dams"><svg class="ic ic-dam" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h4l2 12H3Z"/><path class="ic-flow" d="M10.2 7.5H17M10.8 11H17M11.3 14.5H17"/></svg><span><span class="sheet__name" data-i18n="nav.dams">Dam levels</span><span class="sheet__sub" data-i18n="nav.damsSub">The 4 main dams and the Chao Phraya dam</span></span></a>
+      <a class="sheet__item" href="water.html" data-nav="water"><svg class="ic ic-water" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2.8c-2.4 3.4-5 6.4-5 9.2a5 5 0 0 0 10 0c0-2.8-2.6-5.8-5-9.2Z"/><path class="ic-fill" d="M6.3 12.4c1.2-.9 2.5-.9 3.7 0s2.5.9 3.7 0"/></svg><span><span class="sheet__name" data-i18n="nav.water">Water levels</span><span class="sheet__sub" data-i18n="nav.waterSub">Rivers, canals and road flooding in Bangkok</span></span></a>
+    </div>
+  </div>
+
+  <script src="js/lang.js?v=20261016b"></script>
+  <script src="js/i18n.js?v=20261016b" defer></script>
+  <script src="js/api.js?v=20261016b" defer></script>
+  <script src="js/shell.js?v=20261016b" defer></script>
+  <script src="js/sky.js?v=20261016b" defer></script>
+  <script src="js/risk.js?v=20261016b" defer></script>
+</body>
+</html>

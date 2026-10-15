@@ -109,6 +109,20 @@
     }
   }
 
+  // Carry the sky on from where the last page left it, so moving between pages never restarts the clouds
+  var SKY_KEY = 'gw_sky_t';
+  if (video) {
+    var resume = 0;
+    try { resume = parseFloat(sessionStorage.getItem(SKY_KEY)) || 0; } catch (e) { resume = 0; }
+    var seek = function () {
+      if (resume > 0 && video.duration) video.currentTime = (resume + 0.3) % video.duration;
+    };
+    if (video.readyState >= 1) seek(); else video.addEventListener('loadedmetadata', seek, { once: true });
+    window.addEventListener('pagehide', function () {
+      try { sessionStorage.setItem(SKY_KEY, String(video.currentTime || 0)); } catch (e) { /* storage blocked */ }
+    });
+  }
+
   resize();
   applyMotion();
 

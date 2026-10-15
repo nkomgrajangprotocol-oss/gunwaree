@@ -1,12 +1,12 @@
 /* GunWaree Dam levels: the four storage dams above Bangkok and the Chao Phraya diversion dam.
 
    Endpoint            Refresh      Used for
-   GET /dams/latest    30 minutes   schematic markers, selected dam, watchlist
+   GET /dams/latest    30 minutes   map markers, selected dam, watchlist
 
    Rules from the plan: dam data is daily ("Daily data as of ..."), never called live; null is
    "Awaiting report", never 0; the Chao Phraya dam has no storage, only flow (outflow, from station
    C.13, already converted to million m³/day) plus the backend's note. Status is the ThaiWater storage
-   scale, worked out here from pct. Positions on the schematic are illustrative, not to scale. */
+   scale, worked out here from pct. The map is OpenFreeMap (OpenStreetMap data) drawn by js/maps.js. */
 
 (function (GW) {
   'use strict';
@@ -15,39 +15,10 @@
   var F = GW.fmt;
   var h = F.h;
   var $ = function (sel, root) { return (root || document).querySelector(sel); };
-  var SVG = 'http://www.w3.org/2000/svg';
 
   var REFRESH_MS = 30 * 60 * 1000;
-  var BASE = { x: 0, y: 0, w: 800, h: 440 };
 
-  // Where each dam sits on the schematic (viewBox 800 x 440, north up), and which way its label goes
-  var NODES = {
-    'ภูมิพล': { x: 175, y: 98, side: 'right' },
-    'สิริกิติ์': { x: 505, y: 56, side: 'right' },
-    'แควน้อยบำรุงแดน': { x: 600, y: 116, side: 'below' },
-    'ป่าสักชลสิทธิ์': { x: 610, y: 296, side: 'right' },
-    'เจ้าพระยา': { x: 392, y: 270, side: 'left' }
-  };
-  var TOWNS = [
-    { th: 'นครสวรรค์', x: 405, y: 222, side: 'right', dy: 4 },
-    { th: 'พระนครศรีอยุธยา', x: 452, y: 345, side: 'right', dy: 16 },
-    { th: 'กรุงเทพมหานคร', x: 440, y: 400, side: 'left', dy: 4 }
-  ];
-  // Rivers drawn from upstream to downstream, so the moving dashes run with the current.
-  // `dam` is the dam whose daily release sets the speed of that river's water.
-  var RIVERS = [
-    { key: 'ping', en: 'Ping', th: 'ปิง', dam: 'ภูมิพล', label: [262, 150],
-      pts: [[118, 34], [150, 64], [175, 98], [215, 132], [265, 166], [330, 196], [372, 212], [405, 222]] },
-    { key: 'nan', en: 'Nan', th: 'น่าน', dam: 'สิริกิติ์', label: [432, 96],
-      pts: [[522, 14], [505, 56], [483, 98], [468, 140], [450, 180], [425, 208], [405, 222]] },
-    { key: 'khwae', en: 'Khwae Noi', th: 'แควน้อย', dam: 'แควน้อยบำรุงแดน', label: [520, 122],
-      pts: [[660, 92], [600, 116], [556, 128], [510, 136], [468, 140]] },
-    { key: 'pasak', en: 'Pa Sak', th: 'ป่าสัก', dam: 'ป่าสักชลสิทธิ์', label: [654, 230],
-      pts: [[646, 180], [632, 244], [610, 296], [570, 322], [515, 338], [452, 345]] },
-    { key: 'chao', en: 'Chao Phraya', th: 'เจ้าพระยา', dam: 'เจ้าพระยา', label: [330, 318],
-      pts: [[405, 222], [396, 248], [392, 270], [400, 304], [425, 330], [452, 345], [447, 374], [440, 400], [444, 434]] }
-  ];
-
+  // ThaiWater storage scale
   var CLASSES = [
     { key: 'critlow', max: 30, tone: 'grey' },
     { key: 'low', max: 50, tone: 'grey' },
@@ -92,25 +63,6 @@
     return t ? lang.t('dams.asOf', { date: t }) : '';
   }
 
-  function svg(tag, attrs, parent) {
-    var e = document.createElementNS(SVG, tag);
-    Object.keys(attrs || {}).forEach(function (k) { e.setAttribute(k, attrs[k]); });
-    if (parent) parent.appendChild(e);
-    return e;
-  }
-
-  // Smooth line through the points (Catmull-Rom turned into cubic Béziers)
-  function smoothPath(pts) {
-    var d = 'M' + pts[0][0] + ' ' + pts[0][1];
-    for (var i = 0; i < pts.length - 1; i++) {
-      var p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
-      var c1x = p1[0] + (p2[0] - p0[0]) / 6, c1y = p1[1] + (p2[1] - p0[1]) / 6;
-      var c2x = p2[0] - (p3[0] - p1[0]) / 6, c2y = p2[1] - (p3[1] - p1[1]) / 6;
-      d += ' C' + c1x.toFixed(1) + ' ' + c1y.toFixed(1) + ' ' + c2x.toFixed(1) + ' ' + c2y.toFixed(1) + ' ' + p2[0] + ' ' + p2[1];
-    }
-    return d;
-  }
-
   function findDam(name) {
     return (state.dams || []).filter(function (d) { return d.name === name; })[0] || null;
   }
@@ -123,81 +75,66 @@
       lang.t('dams.' + typeOf(d))].join(' ').toLowerCase().indexOf(q) >= 0;
   }
 
-  /* ---------- Schematic ---------- */
+  /* ---------- Map ---------- */
 
-  var svgEl = $('[data-dam-svg]');
-  var stage = $('[data-dam-stage]');
-  var vb = { x: BASE.x, y: BASE.y, w: BASE.w, h: BASE.h };
-  var markers = {};
+  var stage = $('.map-card__stage');
+  var map = null;
+  var markers = {};      // dam name -> marker element
+  var pins = [];         // MapLibre markers on the map
 
-  function drawSchematic() {
-    svgEl.textContent = '';
-    var defs = svg('defs', {}, svgEl);
+  function hasPos(d) { return typeof d.lat === 'number' && typeof d.lon === 'number'; }
 
-    // Gulf of Thailand
-    svg('path', { class: 'sch-sea', d: 'M300 440 C360 418 410 414 444 424 C500 414 560 420 640 440 Z' }, svgEl);
-    var gulf = svg('text', { class: 'sch-sea__label', x: 560, y: 432 }, svgEl);
-    gulf.textContent = lang.get() === 'th' ? 'อ่าวไทย' : 'Gulf of Thailand';
+  // Every dam in view, flat and facing north
+  function showAll(m, animate) {
+    var list = (state.dams || []).filter(hasPos);
+    if (!m || !list.length) return;
+    var b = new window.maplibregl.LngLatBounds();
+    list.forEach(function (d) { b.extend([d.lon, d.lat]); });
+    m.fitBounds(b, { padding: { top: 60, bottom: 50, left: 50, right: 190 }, pitch: 0, bearing: 0, duration: animate ? 1200 : 0, maxZoom: 8 });
+  }
 
-    var rivers = svg('g', { class: 'sch-rivers' }, svgEl);
-    RIVERS.forEach(function (r) {
-      var d = smoothPath(r.pts);
-      svg('path', { class: 'river', d: d }, rivers);
-      var dam = findDam(r.dam);
-      var out = dam && !isMissing(dam.outflow) ? dam.outflow : null;
-      if (out !== null) {
-        var speed = 5 + 9 * Math.log10(1 + Math.max(0, out));   // viewBox units per second
-        var flow = svg('path', { class: 'river__flow', d: d }, rivers);
-        flow.style.setProperty('--flow-dur', (32 / speed).toFixed(2) + 's');
-      }
-      var label = svg('text', { class: 'river__label', x: r.label[0], y: r.label[1] }, rivers);
-      label.textContent = lang.get() === 'th' ? 'แม่น้ำ' + r.th : r.en;
-    });
+  // Selecting a dam flies there and tilts the map so the valley reads in 3D
+  function flyTo(d) {
+    if (!map || !hasPos(d)) return;
+    map.flyTo({ center: [d.lon, d.lat], zoom: 9.2, pitch: 54, bearing: -16, speed: 0.9, curve: 1.45, padding: { right: 120 } });
+  }
 
-    var towns = svg('g', { class: 'sch-towns' }, svgEl);
-    TOWNS.forEach(function (t) {
-      svg('circle', { class: 'town', cx: t.x, cy: t.y, r: 3.5 }, towns);
-      var tx = svg('text', { class: 'town__label', x: t.x + (t.side === 'left' ? -10 : 10), y: t.y + t.dy, 'text-anchor': t.side === 'left' ? 'end' : 'start' }, towns);
-      tx.textContent = lang.get() === 'th' ? t.th : place(t.th);
-    });
+  function markerLabel(d) {
+    if (typeOf(d) === 'reservoir') return isMissing(d.pct) ? lang.t('status.awaiting') : F.num(d.pct, 1) + '%';
+    return isMissing(d.outflow) ? lang.t('status.awaiting') : F.num(toCms(d.outflow), 0) + ' ' + lang.t('dams.cms');
+  }
 
+  function drawMarkers(fillFromEmpty) {
+    if (!map || !state.dams) return;
+    pins.forEach(function (p) { p.remove(); });
+    pins = [];
     markers = {};
-    var marks = svg('g', { class: 'sch-marks' }, svgEl);
-    (state.dams || []).forEach(function (d, i) {
-      var n = NODES[d.name];
-      if (!n) return;
-      var g = svg('g', { class: 'dmark dmark--' + typeOf(d), transform: 'translate(' + n.x + ' ' + n.y + ')', tabindex: '0', role: 'button' }, marks);
-      g.setAttribute('aria-label', lang.t('dams.select', { name: damName(d) }));
-      g.setAttribute('data-name', d.name);
-      svg('circle', { class: 'dmark__pulse', r: 14 }, g);
-      svg('circle', { class: 'dmark__hit', r: 22 }, g);
-
-      if (typeOf(d) === 'reservoir') {
-        var id = 'dclip-' + i;
-        var cp = svg('clipPath', { id: id }, defs);
-        svg('circle', { r: 12 }, cp);
-        svg('circle', { class: 'dmark__bg', r: 12 }, g);
-        var level = Math.max(0, Math.min(100, d.pct || 0));
-        svg('rect', { class: 'dmark__water', x: -12, y: 12 - 24 * level / 100, width: 24, height: 24, 'clip-path': 'url(#' + id + ')' }, g);
-        svg('circle', { class: 'dmark__ring', r: 12 }, g);
-      } else {
-        svg('rect', { class: 'dmark__gate', x: -13, y: -8, width: 26, height: 16, rx: 3 }, g);
-        svg('path', { class: 'dmark__gate-lines', d: 'M-6 -5v10M0 -5v10M6 -5v10' }, g);
-      }
-
-      var below = n.side === 'below';
-      var lx = below ? 0 : n.side === 'left' ? -22 : 22;
-      var anchor = below ? 'middle' : n.side === 'left' ? 'end' : 'start';
-      var name = svg('text', { class: 'dmark__name', x: lx, y: below ? 36 : -2, 'text-anchor': anchor }, g);
-      name.textContent = damName(d);
-      var sub = svg('text', { class: 'dmark__sub', x: lx, y: below ? 52 : 15, 'text-anchor': anchor }, g);
-      sub.textContent = (typeOf(d) === 'reservoir' && !isMissing(d.pct) ? F.num(d.pct, 1) + '% · ' : '') + provinceName(d);
-
-      g.addEventListener('click', function () { select(d.name, true); });
-      g.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(d.name, true); }
+    state.dams.forEach(function (d) {
+      if (!hasPos(d)) return;
+      var res = typeOf(d) === 'reservoir';
+      var el = h('button', 'dpin dpin--' + typeOf(d));
+      el.type = 'button';
+      el.setAttribute('aria-label', lang.t('dams.select', { name: damName(d) }) + ', ' + markerLabel(d));
+      var cup = h('span', 'dpin__cup');
+      var water = h('span', 'dpin__water');
+      cup.appendChild(water);
+      el.appendChild(cup);
+      el.appendChild(h('span', 'dpin__ring'));
+      var label = h('span', 'dpin__label', damName(d));
+      label.appendChild(h('small', null, markerLabel(d)));
+      el.appendChild(label);
+      el.addEventListener('click', function (e) {
+        e.stopPropagation();
+        select(d.name, true);
       });
-      markers[d.name] = g;
+      var level = res && !isMissing(d.pct) ? Math.max(0, Math.min(100, d.pct)) + '%' : '';
+      if (!fillFromEmpty || F.reduceMotion()) water.style.height = level;
+      pins.push(new window.maplibregl.Marker({ element: el }).setLngLat([d.lon, d.lat]).addTo(map));
+      markers[d.name] = el;
+      // The water rises in each marker once it is on the map
+      if (fillFromEmpty && !F.reduceMotion()) {
+        requestAnimationFrame(function () { requestAnimationFrame(function () { water.style.height = level; }); });
+      }
     });
     applyFilter();
     markSelected(false);
@@ -208,66 +145,17 @@
       var on = k === state.selected;
       markers[k].classList.toggle('is-selected', on);
       markers[k].setAttribute('aria-pressed', String(on));
-      if (on && pulse) {
-        markers[k].classList.remove('is-pulsing');
-        void markers[k].getBoundingClientRect();
-        markers[k].classList.add('is-pulsing');
-      }
+      markers[k].parentNode && (markers[k].style.zIndex = on ? '2' : '');
+      if (on && pulse) F.replay(markers[k], 'is-pulsing', 2300);
     });
   }
 
-  // On a narrow screen the drawing is wider than its card: start with the Chao Phraya in view
-  function centreSchematic() {
-    var sc = $('[data-dam-scroll]');
-    if (sc && sc.scrollWidth > sc.clientWidth) sc.scrollLeft = (sc.scrollWidth - sc.clientWidth) / 2;
-  }
-
-  /* Zoom and pan on the schematic's viewBox */
-
-  function clampView() {
-    vb.w = Math.max(BASE.w * 0.4, Math.min(BASE.w, vb.w));
-    vb.h = vb.w * BASE.h / BASE.w;
-    vb.x = Math.max(BASE.x, Math.min(BASE.x + BASE.w - vb.w, vb.x));
-    vb.y = Math.max(BASE.y, Math.min(BASE.y + BASE.h - vb.h, vb.y));
-    svgEl.setAttribute('viewBox', [vb.x, vb.y, vb.w, vb.h].map(function (v) { return v.toFixed(1); }).join(' '));
-    stage.classList.toggle('is-zoomed', vb.w < BASE.w - 1);
-  }
-
-  function zoom(factor) {
-    var cx = vb.x + vb.w / 2, cy = vb.y + vb.h / 2;
-    vb.w *= factor;
-    vb.h = vb.w * BASE.h / BASE.w;
-    vb.x = cx - vb.w / 2;
-    vb.y = cy - vb.h / 2;
-    clampView();
-  }
-
-  document.querySelectorAll('[data-zoom]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      var z = b.getAttribute('data-zoom');
-      if (z === 'in') zoom(0.75);
-      else if (z === 'out') zoom(1 / 0.75);
-      else { vb = { x: BASE.x, y: BASE.y, w: BASE.w, h: BASE.h }; clampView(); }
-    });
+  GW.maps.create(stage, { center: [100.4, 16.2], zoom: 6, onReset: function (m) { showAll(m, true); } }).then(function (m) {
+    map = m;
+    if (!m) return;
+    drawMarkers(true);
+    showAll(m, false);
   });
-
-  var drag = null;
-  svgEl.addEventListener('pointerdown', function (e) {
-    if (!stage.classList.contains('is-zoomed') || e.target.closest('.dmark')) return;
-    drag = { x: e.clientX, y: e.clientY, vx: vb.x, vy: vb.y };
-    svgEl.setPointerCapture(e.pointerId);
-    stage.classList.add('is-dragging');
-  });
-  svgEl.addEventListener('pointermove', function (e) {
-    if (!drag) return;
-    var k = vb.w / svgEl.clientWidth;
-    vb.x = drag.vx - (e.clientX - drag.x) * k;
-    vb.y = drag.vy - (e.clientY - drag.y) * k;
-    clampView();
-  });
-  function endDrag() { drag = null; stage.classList.remove('is-dragging'); }
-  svgEl.addEventListener('pointerup', endDrag);
-  svgEl.addEventListener('pointercancel', endDrag);
 
   /* ---------- Selected dam ---------- */
 
@@ -527,6 +415,7 @@
     markSelected(animate && changed);
     markRows();
     renderDetail(animate && changed);
+    if (animate && changed) flyTo(findDam(name));
     if (fromTable && window.matchMedia('(max-width: 920px)').matches) {
       detail.scrollIntoView({ behavior: F.reduceMotion() ? 'auto' : 'smooth', block: 'start' });
     }
@@ -561,7 +450,23 @@
 
   var retryTimer = 0;
 
+  // While someone is reading the page (pointer over a [data-hold] section), a refresh waits
+  // and runs as soon as they move away. The first load always runs.
+  var pendingRefresh = false;
+  function heldBack() {
+    if (!GW.hold || !GW.hold.active()) return false;
+    pendingRefresh = true;
+    GW.hold.deferred();
+    return true;
+  }
+  if (GW.hold) GW.hold.onRelease(function () {
+    if (!pendingRefresh) return;
+    pendingRefresh = false;
+    load();
+  });
+
   function load() {
+    if (state.dams && heldBack()) return Promise.resolve();
     return GW.load('/dams/latest', 'dams.json', {
       auth: false,
       onSlow: function () { connecting = true; renderStatus(); }
@@ -570,11 +475,12 @@
       state.dams = res.data || [];
       state.mode = res.mode;
       state.error = null;
+      if (res.mode === 'live') GW.pulse();
       if (!state.selected || !findDam(state.selected)) state.selected = defaultDam();
-      drawSchematic();
+      drawMarkers(first);
+      if (first) showAll(map, false);
       renderTable();
       renderDetail(first);
-      if (first) centreSchematic();
     }, function (err) {
       state.error = err;
       if (!state.dams) { renderTable(); renderDetail(false); }
@@ -592,13 +498,12 @@
 
   document.addEventListener('gw:lang', function () {
     if (!state.dams) return;
-    drawSchematic();
+    drawMarkers(false);
     renderTable();
     renderDetail(false);
     renderStatus();
   });
 
-  clampView();
   load();
   setInterval(function () { if (!document.hidden) load(); }, REFRESH_MS);
 })(window.GW = window.GW || {});
