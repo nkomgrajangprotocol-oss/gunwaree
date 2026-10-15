@@ -10,10 +10,10 @@ from fastapi.middleware.cors import CORSMiddleware
 import fetch_latest
 import risk
 from auth import (current_user, hash_password, issue_reset_code, issue_token, require_admin,
-                  require_client, use_reset_code, verify_password)
-from db import TH_TZ, get_conn, latest_station_readings, now_th
-from schemas import (ForgotPasswordIn, IncidentIn, IncidentStatusIn, LoginIn, PumpCommandIn,
-                     ResetPasswordIn, SignupIn)
+                  require_client, require_device, use_reset_code, verify_password)
+from db import TH_TZ, get_conn, latest_station_readings, now_th, upsert_station
+from schemas import (DeviceReadingIn, ForgotPasswordIn, IncidentIn, IncidentStatusIn, LoginIn,
+                     PumpCommandIn, ResetPasswordIn, SignupIn)
 from seed import seed
 
 
@@ -50,6 +50,8 @@ BANGKOK_DISTRICTS = [
 ]
 ROAD_FRESH_MINUTES = 30  # จุดวัดถนนที่ไม่ส่งค่าเกิน 30 นาที POPNIX ถือว่าขัดข้อง (off) ไม่นับ
 LEVEL_ORDER = {"danger": 0, "high": 1, "medium": 2, "safe": 3, "nodata": 4}
+PUMP_MAX_RUN_S = 60     # backend ตอบ on ได้ไม่เกิน 60 วินาทีหลังสร้างคำสั่ง
+PUMP_COOLDOWN_S = 70    # สั่ง on ใหม่ได้หลัง 70 วินาที (60 ที่ปั๊มทำงาน + 10 เผื่อบอร์ดปลดล็อก)
 
 
 def _water_source(conn) -> str:
@@ -57,6 +59,22 @@ def _water_source(conn) -> str:
     ตัดสินทั้งระบบ ไม่แยกตาม kind เพื่อไม่ให้ค่าจริงกับค่าจำลองปนกันในคำตอบเดียว"""
     has_popnix = conn.execute("SELECT 1 FROM stations WHERE source = 'popnix' LIMIT 1").fetchone()
     return "popnix" if has_popnix and fetch_latest.active_source != "sim" else "sim"
+
+
+def _seconds_since(ts: Optional[str]) -> Optional[float]:
+    """จำนวนวินาทีจากเวลาไทย "YYYY-MM-DD HH:MM:SS" ถึงตอนนี้ คืน None ถ้าไม่มีเวลา"""
+    if not ts:
+        return None
+    then = datetime.strptime(ts, "%Y-%m-%d %H:%M:%S").replace(tzinfo=TH_TZ)
+    return (datetime.now(TH_TZ) - then).total_seconds()
+
+
+def _latest_pump_command(conn, region: str):
+    return conn.execute(
+        "SELECT id, command, created_at, executed_at FROM pump_commands "
+        "WHERE region = ? ORDER BY id DESC LIMIT 1",
+        (region,),
+    ).fetchone()
 
 
 def _district_level(depths: list[float]) -> str:
@@ -367,6 +385,13 @@ def admin_pump_command(body: PumpCommandIn, admin: dict = Depends(require_admin)
     now = now_th()
     conn = get_conn()
     try:
+        if body.command == "on":
+            # ห้ามสั่ง on ซ้ำระหว่างที่คำสั่ง on ล่าสุดยังไม่ครบ 70 วินาที (off สั่งได้เสมอ และยกเลิกการรอ)
+            last = _latest_pump_command(conn, body.region)
+            if last is not None and last["command"] == "on":
+                elapsed = _seconds_since(last["created_at"])
+                if elapsed is not None and elapsed < PUMP_COOLDOWN_S:
+                    raise HTTPException(status_code=409, detail="ปั๊มยังทำงานอยู่ รอครบเวลาก่อน")
         # บันทึกว่าใครสั่ง (created_by) จาก token
         cur = conn.execute(
             "INSERT INTO pump_commands (region, command, status, created_by, created_at) "
@@ -417,3 +442,47 @@ def admin_affected_areas(admin: dict = Depends(require_admin)):
         "areas": [{k: d[k] for k in ("district", "level", "max_depth_cm", "flooded_points",
                                      "road_points", "lat", "lon")} for d in monitored],
     }
+
+
+# ---------- อุปกรณ์ ESP32 (X-Device-Key) ----------
+
+@app.post("/device/readings", status_code=201, dependencies=[Depends(require_device)])
+def device_reading(body: DeviceReadingIn):
+    now = now_th()  # เวลา backend ตั้งเอง ไม่รับจากบอร์ด
+    conn = get_conn()
+    try:
+        station_id = upsert_station(conn, "esp32", {
+            "code": body.device_id, "kind": "canal", "name": "ชุดทดลอง ESP32",
+        })
+        # บอร์ดส่งเป็น cm เก็บเป็นเมตร distance_cm ไม่เก็บ
+        conn.execute(
+            "INSERT OR REPLACE INTO readings (station_id, water_level, status, measured_at) "
+            "VALUES (?, ?, ?, ?)",
+            (station_id, body.water_level_cm / 100, body.status, now),
+        )
+        conn.commit()
+        return {"ok": True}
+    finally:
+        conn.close()
+
+
+@app.get("/device/pump-command", dependencies=[Depends(require_device)])
+def device_pump_command(region: Literal["bangkok_test"]):
+    conn = get_conn()
+    try:
+        last = _latest_pump_command(conn, region)
+        if last is None or last["command"] != "on":
+            return {"pump": "off"}
+        elapsed = _seconds_since(last["created_at"])
+        if elapsed is None or elapsed >= PUMP_MAX_RUN_S:
+            return {"pump": "off"}  # ครบเวลาแล้ว backend หยุดตอบ on เอง
+        if last["executed_at"] is None:  # บอร์ดรับคำสั่งนี้ครั้งแรก
+            conn.execute(
+                "UPDATE pump_commands SET executed_at = ?, status = 'executed' "
+                "WHERE id = ? AND executed_at IS NULL",
+                (now_th(), last["id"]),
+            )
+            conn.commit()
+        return {"pump": "on", "max_run_s": PUMP_MAX_RUN_S}
+    finally:
+        conn.close()
