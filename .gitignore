@@ -1,0 +1,17 @@
+.env
+.env.*
+!.env.example
+secrets.h
+*.db
+*.sqlite
+*.sqlite3
+/data/
+venv/
+.venv/
+__pycache__/
+*.pyc
+.vscode/
+.pio/
+.DS_Store
+Thumbs.db
+*.log
