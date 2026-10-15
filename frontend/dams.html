@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dam levels · GunWaree</title>
+  <meta name="description" content="Storage in the four main dams above Bangkok and flow through the Chao Phraya dam. ระดับน้ำในเขื่อนหลัก">
+  <meta name="theme-color" content="#0A303A">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <script>
+    // Arriving through the intro warp: fade in from the white the warp ends on
+    try {
+      if (sessionStorage.getItem('gw_warp')) {
+        sessionStorage.removeItem('gw_warp');
+        document.documentElement.classList.add('is-arriving-sky');
+      }
+    } catch (e) { /* storage blocked */ }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body class="app">
+
+  <!-- Background: bright blue sky with white clouds (Miguel Á. Padriñán, Pexels) with falling rain drawn by js/sky.js -->
+  <div class="sky" aria-hidden="true">
+    <video class="sky__video" data-sky-video autoplay muted loop playsinline preload="auto" poster="assets/img/sky-blue-poster.jpg">
+      <source src="assets/video/sky-blue-1080p.mp4" type="video/mp4">
+    </video>
+    <canvas class="sky__rain" data-sky-rain></canvas>
+    <div class="sky__shade"></div>
+  </div>
+
+  <div class="app-shell">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <a class="logo" href="index.html" aria-label="GunWaree">
+        <svg viewBox="0 0 24 30" aria-hidden="true">
+          <defs><clipPath id="logo-drop"><path d="M12 1.5C9.1 5.8 3.6 11.9 3.6 17.9a8.4 8.4 0 0 0 16.8 0c0-6-5.5-12.1-8.4-16.4Z"/></clipPath></defs>
+          <g clip-path="url(#logo-drop)">
+            <rect width="24" height="30" fill="#C4F7F2"/>
+            <path d="M0 18.6c3-2.3 6-2.3 9 0s6 2.3 9 0 6-2.3 9 0V30H0Z" fill="#7CEBE3"/>
+            <path d="M0 18.6c3-2.3 6-2.3 9 0s6 2.3 9 0 6-2.3 9 0" fill="none" stroke="#0A303A" stroke-width="1.7"/>
+          </g>
+        </svg>
+        <span>GunWaree</span>
+      </a>
+
+      <nav class="nav" data-i18n-aria="nav.label" aria-label="Main menu">
+        <p class="nav__eyebrow eyebrow" data-i18n="nav.label">Main menu</p>
+        <ul role="list">
+          <li>
+            <a class="nav__item" href="home.html">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.2 10 3.5l7 5.7V16a1 1 0 0 1-1 1h-3.5v-4.5h-5V17H4a1 1 0 0 1-1-1Z"/></svg>
+              <span data-i18n="nav.home">Home</span>
+            </a>
+          </li>
+          <li>
+            <span class="nav__item is-soon" aria-disabled="true">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 16h14"/><path d="M4 12.5 7.5 9l3 2.5L16 5.5"/><path d="M12.5 5.5H16V9"/></svg>
+              <span data-i18n="nav.risk">Risk prediction</span>
+              <span class="nav__soon" data-i18n="nav.soon">Soon</span>
+            </span>
+          </li>
+          <li>
+            <a class="nav__item" href="reports.html">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="12" height="14" rx="1.5"/><path d="M7.5 3.5V2.5h5v1"/><path d="M10 8v5M7.5 10.5h5"/></svg>
+              <span data-i18n="nav.reports">Rescue reports</span>
+            </a>
+          </li>
+          <li>
+            <a class="nav__item is-active" href="dams.html" aria-current="page">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h4l2 12H3Z"/><path d="M9.2 7.5H17M9.8 11H17M10.3 14.5H17"/></svg>
+              <span data-i18n="nav.dams">Dam levels</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="profile" data-profile></div>
+    </aside>
+
+    <!-- Main column -->
+    <div class="app-main">
+      <header class="topbar">
+        <a class="logo topbar__brand" href="index.html" aria-label="GunWaree">
+          <svg viewBox="0 0 24 30" aria-hidden="true">
+            <defs><clipPath id="logo-drop-top"><path d="M12 1.5C9.1 5.8 3.6 11.9 3.6 17.9a8.4 8.4 0 0 0 16.8 0c0-6-5.5-12.1-8.4-16.4Z"/></clipPath></defs>
+            <g clip-path="url(#logo-drop-top)">
+              <rect width="24" height="30" fill="#C4F7F2"/>
+              <path d="M0 18.6c3-2.3 6-2.3 9 0s6 2.3 9 0 6-2.3 9 0V30H0Z" fill="#7CEBE3"/>
+              <path d="M0 18.6c3-2.3 6-2.3 9 0s6 2.3 9 0 6-2.3 9 0" fill="none" stroke="#0A303A" stroke-width="1.7"/>
+            </g>
+          </svg>
+          <span>GunWaree</span>
+        </a>
+        <p class="topbar__place">
+          <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M9 16s5-4.6 5-8.6A5 5 0 0 0 4 7.4C4 11.4 9 16 9 16Z"/><circle cx="9" cy="7.3" r="1.8"/></svg>
+          <span data-i18n="top.location">Bangkok, Thailand</span>
+        </p>
+        <p class="data-status" data-status aria-live="polite"></p>
+
+        <div class="topbar__actions">
+          <div class="lang-switch" role="group" data-i18n-aria="lang.label" aria-label="Language">
+            <button type="button" data-lang-btn="th" lang="th" aria-pressed="false">TH</button>
+            <button type="button" data-lang-btn="en" lang="en" aria-pressed="true">EN</button>
+          </div>
+
+          <div class="bell">
+            <button class="bell__btn" type="button" aria-expanded="false" aria-controls="bell-panel" data-bell data-i18n-aria="bell.label" aria-label="Alerts">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M5 8.5a5 5 0 0 1 10 0c0 3.8 1.5 5.2 1.5 5.2h-13S5 12.3 5 8.5Z"/><path d="M8.3 16.2a1.8 1.8 0 0 0 3.4 0" stroke-linecap="round"/></svg>
+              <span class="bell__count" data-bell-count hidden></span>
+            </button>
+            <div class="bell__panel" id="bell-panel" data-bell-panel hidden>
+              <p class="bell__title" data-i18n="bell.title">Flood alerts</p>
+              <div data-bell-body></div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="content" id="main" tabindex="-1">
+        <div class="page-head">
+          <h1 data-i18n="dams.pageTitle">Dam levels</h1>
+          <p class="page-head__sub"><span data-i18n="dams.pageSub">Storage in the four main dams above Bangkok and the flow through the Chao Phraya diversion dam.</span> <span class="page-head__date" data-dams-asof></span></p>
+        </div>
+
+        <div class="dam-tools">
+          <label class="visually-hidden" for="dam-search" data-i18n="dams.search">Search dam or province</label>
+          <div class="input dam-tools__search">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.25"/><path d="m12 12 3.75 3.75"/></svg>
+            <input id="dam-search" type="search" autocomplete="off" spellcheck="false" data-dam-search data-i18n-ph="dams.search">
+          </div>
+          <label class="visually-hidden" for="dam-type" data-i18n="dams.type">Dam type</label>
+          <div class="input dam-tools__type">
+            <select id="dam-type" data-dam-type>
+              <option value="all" data-i18n="dams.typeAll">All types</option>
+              <option value="reservoir" data-i18n="dams.typeRes">Reservoirs</option>
+              <option value="diversion" data-i18n="dams.typeDiv">Diversion dam</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="dam-grid">
+          <section class="card dam-map" aria-labelledby="dam-map-title">
+            <div class="dam-map__head">
+              <h2 class="dam-map__title" id="dam-map-title" data-i18n="dams.schematic">River schematic</h2>
+              <p class="dam-map__north" aria-hidden="true"><svg viewBox="0 0 12 14"><path d="M6 1 10.5 13 6 10 1.5 13Z" fill="currentColor"/></svg><span data-i18n="dams.north">N</span></p>
+            </div>
+            <div class="dam-map__stage" data-dam-stage>
+              <div class="dam-map__scroll" data-dam-scroll>
+                <svg class="dam-svg" data-dam-svg viewBox="0 0 800 440" role="group" aria-labelledby="dam-map-title"></svg>
+              </div>
+              <div class="dam-map__zoom">
+                <button type="button" data-zoom="in" data-i18n-aria="dams.zoomIn" aria-label="Zoom in"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+                <button type="button" data-zoom="out" data-i18n-aria="dams.zoomOut" aria-label="Zoom out"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+                <button type="button" data-zoom="reset" data-i18n-aria="dams.zoomReset" aria-label="Reset view"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="8" cy="8" r="4.5"/><circle cx="8" cy="8" r="1.2" fill="currentColor"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2" stroke-linecap="round"/></svg></button>
+              </div>
+            </div>
+            <p class="dam-map__note" data-i18n="dams.mapNote">Illustrative, not to scale. The moving water follows each dam's daily release.</p>
+          </section>
+
+          <section class="card dam-detail" data-dam-detail aria-live="polite">
+            <span class="sk-line sk-line--sm"></span>
+            <span class="sk-line sk-line--lg"></span>
+            <span class="sk-line sk-line--md"></span>
+            <span class="sk-line"></span>
+          </section>
+        </div>
+
+        <section class="card panel" aria-labelledby="watch-title">
+          <div class="panel__head">
+            <div>
+              <h2 id="watch-title" data-i18n="dams.watchlist">Watchlist</h2>
+              <p class="panel__sub" data-watch-sub></p>
+            </div>
+            <p class="card__time" data-watch-time></p>
+          </div>
+          <div class="dam-table-wrap">
+            <table class="dam-table">
+              <thead>
+                <tr>
+                  <th scope="col" data-i18n="dams.colDam">Dam</th>
+                  <th scope="col" data-i18n="dams.colProvince">Province</th>
+                  <th scope="col" data-i18n="dams.colType">Type</th>
+                  <th scope="col" data-i18n="dams.colStorage">Storage or flow</th>
+                  <th scope="col" data-i18n="dams.colStatus">Status</th>
+                </tr>
+              </thead>
+              <tbody data-dam-rows>
+                <tr><td colspan="5"><span class="sk-line sk-line--md"></span><span class="sk-line sk-line--md"></span><span class="sk-line sk-line--sm"></span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="dam-table__empty" data-dam-empty hidden data-i18n="dams.noMatch">No dam matches your search.</p>
+          <p class="dam-scale" data-i18n="dams.scale">Status uses the ThaiWater storage scale.</p>
+        </section>
+      </main>
+
+      <footer class="app-footer">
+        <ul role="list">
+          <li><a href="terms.html" data-i18n="legal.terms">Terms of Service</a></li>
+          <li><a href="privacy.html" data-i18n="legal.privacy">Privacy Policy</a></li>
+        </ul>
+        <p data-i18n="legal.notice">Hackathon prototype, not an official flood warning. In an emergency call 191 or 1669.</p>
+        <p data-i18n="legal.credits">Data: Bangkok Drainage and Sewerage Office via POPNIX Flood, ThaiWater / HII, Open-Meteo (CC BY 4.0), Royal Irrigation Department.</p>
+        <p data-i18n="legal.media">Sky video: Miguel Á. Padriñán. Bangkok photo: Pexels.</p>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Bottom tabs on small screens -->
+  <nav class="tabbar" data-i18n-aria="nav.label" aria-label="Main menu">
+    <a class="nav__item" href="home.html">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.2 10 3.5l7 5.7V16a1 1 0 0 1-1 1h-3.5v-4.5h-5V17H4a1 1 0 0 1-1-1Z"/></svg>
+      <span data-i18n="nav.home">Home</span>
+    </a>
+    <span class="nav__item is-soon" aria-disabled="true">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 16h14"/><path d="M4 12.5 7.5 9l3 2.5L16 5.5"/><path d="M12.5 5.5H16V9"/></svg>
+      <span data-i18n="nav.risk">Risk prediction</span>
+    </span>
+    <a class="nav__item" href="reports.html">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="12" height="14" rx="1.5"/><path d="M7.5 3.5V2.5h5v1"/><path d="M10 8v5M7.5 10.5h5"/></svg>
+      <span data-i18n="nav.reports">Rescue reports</span>
+    </a>
+    <a class="nav__item is-active" href="dams.html" aria-current="page">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h4l2 12H3Z"/><path d="M9.2 7.5H17M9.8 11H17M10.3 14.5H17"/></svg>
+      <span data-i18n="nav.dams">Dam levels</span>
+    </a>
+  </nav>
+
+  <script src="js/lang.js"></script>
+  <script src="js/i18n.js" defer></script>
+  <script src="js/api.js" defer></script>
+  <script src="js/shell.js" defer></script>
+  <script src="js/sky.js" defer></script>
+  <script src="js/dams.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Welcome · GunWaree</title>
+  <meta name="description" content="Track flood risk, submit rescue reports, and follow your case from alert to resolution. ติดตามความเสี่ยงน้ำท่วม แจ้งเหตุขอความช่วยเหลือ และติดตามคำขอจนได้รับการช่วยเหลือ">
+  <meta name="theme-color" content="#0A303A">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <script>
+    // Skeletons show only when JS runs; the fallback timer guarantees content never stays hidden.
+    document.documentElement.classList.add('is-loading');
+    // Arriving from the intro's warp: start under the ink colour and fade it away
+    try {
+      if (sessionStorage.getItem('gw_warp')) {
+        sessionStorage.removeItem('gw_warp');
+        document.documentElement.classList.add('is-arriving');
+      }
+    } catch (e) { /* storage blocked */ }
+    setTimeout(function () {
+      var r = document.documentElement;
+      if (r.classList.contains('is-loading')) { r.classList.remove('is-loading'); r.classList.add('is-ready'); }
+    }, 3000);
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to sign up and log in <span lang="th">ข้ามไปยังการสมัครและเข้าสู่ระบบ</span></a>
+
+  <div class="shell">
+    <div class="panel-bg" aria-hidden="true"></div>
+
+    <!-- Brand panel -->
+    <header class="brand">
+      <a class="logo" href="index.html" aria-label="GunWaree home">
+        <svg viewBox="0 0 24 30" aria-hidden="true">
+          <defs><clipPath id="logo-drop"><path d="M12 1.5C9.1 5.8 3.6 11.9 3.6 17.9a8.4 8.4 0 0 0 16.8 0c0-6-5.5-12.1-8.4-16.4Z"/></clipPath></defs>
+          <g clip-path="url(#logo-drop)">
+            <rect width="24" height="30" fill="#C4F7F2"/>
+            <path d="M0 18.6c3-2.3 6-2.3 9 0s6 2.3 9 0 6-2.3 9 0V30H0Z" fill="#7CEBE3"/>
+            <path d="M0 18.6c3-2.3 6-2.3 9 0s6 2.3 9 0 6-2.3 9 0" fill="none" stroke="#0A303A" stroke-width="1.7"/>
+          </g>
+        </svg>
+        <span>GunWaree</span>
+      </a>
+
+      <p class="tagline">
+        <span class="en">Stay informed.</span>
+        <span class="en">Stay prepared.</span>
+        <span class="en">Stay safe.</span>
+        <span class="th" lang="th">รู้ทัน เตรียมพร้อม ปลอดภัย</span>
+      </p>
+
+      <div class="intro">
+        <p>Track flood risk, submit rescue reports, and follow your case from alert to resolution.</p>
+        <p class="th-p" lang="th">ติดตามความเสี่ยงน้ำท่วม แจ้งเหตุขอความช่วยเหลือ และติดตามคำขอจนได้รับการช่วยเหลือ</p>
+      </div>
+    </header>
+
+    <!-- Actions -->
+    <main class="actions" id="main" tabindex="-1">
+      <div class="skeleton skeleton--actions" aria-hidden="true">
+        <div class="sk sk--chip"></div>
+        <div class="sk sk--h1"></div>
+        <div class="sk sk--h1b"></div>
+        <div class="sk sk--btn"></div>
+        <div class="sk sk--btn"></div>
+      </div>
+
+      <div data-reveal>
+        <p class="chip">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <circle cx="8" cy="8" r="6.25"/><circle cx="8" cy="8" r="2.75"/>
+            <path d="M3.6 3.6l2.5 2.5M12.4 3.6 9.9 6.1M3.6 12.4l2.5-2.5M12.4 12.4 9.9 9.9"/>
+          </svg>
+          GunWaree
+        </p>
+
+        <h1 class="welcome">
+          Welcome to GunWaree.
+          <span class="th" lang="th">ยินดีต้อนรับสู่ GunWaree</span>
+        </h1>
+
+        <nav aria-label="Get started">
+          <ul class="choice-list" role="list">
+            <li>
+              <a class="choice choice--primary" href="signup.html">
+                <span class="choice__label">
+                  <span class="choice__en">Sign up</span>
+                  <span class="choice__th" lang="th">สมัครใช้งาน</span>
+                </span>
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11.5M11 5.5 15.5 10 11 14.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </a>
+            </li>
+            <li>
+              <a class="choice" href="login.html">
+                <span class="choice__label">
+                  <span class="choice__en">Log in</span>
+                  <span class="choice__th" lang="th">เข้าสู่ระบบ</span>
+                </span>
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11.5M11 5.5 15.5 10 11 14.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <p class="reassure">
+          <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 1.75 3 4v4.6c0 3.7 2.6 6.6 6 7.65 3.4-1.05 6-3.95 6-7.65V4L9 1.75Z"/>
+            <path d="M9 5.8c-.9 1.3-2.1 2.7-2.1 3.9a2.1 2.1 0 0 0 4.2 0c0-1.2-1.2-2.6-2.1-3.9Z" fill="currentColor" stroke="none"/>
+          </svg>
+          <span>
+            Simple to join. Easy to make your own.
+            <span class="th" lang="th">สมัครง่าย ใช้งานสะดวก</span>
+          </span>
+        </p>
+      </div>
+    </main>
+
+    <!-- 3D flood scene: built by js/scene.js from real GunWaree components with sample data -->
+    <div class="scene-wrap">
+      <div class="skeleton skeleton--scene" aria-hidden="true">
+        <div class="sk sk--card sk--a"></div>
+        <div class="sk sk--card sk--b"></div>
+        <div class="sk sk--card sk--c"></div>
+        <div class="sk sk--gauge"></div>
+      </div>
+
+      <div class="scene" data-scene data-reveal aria-hidden="true"></div>
+      <p class="scene-caption eyebrow" data-reveal>Sample data, not live <span class="th" lang="th">ข้อมูลตัวอย่าง ไม่ใช่ข้อมูลจริง</span></p>
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+      <nav aria-label="Legal">
+        <ul class="footer-links" role="list">
+          <li><a href="terms.html">Terms of Service <span class="th" lang="th">ข้อกำหนดการใช้งาน</span></a></li>
+          <li><a href="privacy.html">Privacy Policy <span class="th" lang="th">นโยบายความเป็นส่วนตัว</span></a></li>
+        </ul>
+      </nav>
+      <hr class="footer-rule">
+      <p class="footer-emergency">
+        In an emergency call <strong>191</strong> or <strong>1669</strong>. GunWaree does not replace emergency services.
+        <span class="th" lang="th">เหตุฉุกเฉินโทร <strong>191</strong> หรือ <strong>1669</strong> GunWaree ไม่ได้ทดแทนหน่วยงานฉุกเฉิน</span>
+      </p>
+      <p class="footer-credit">
+        Data: Bangkok Drainage and Sewerage Office via <a href="https://flood.pop.in.th" rel="noopener">POPNIX Flood</a>, ThaiWater / HII, <a href="https://open-meteo.com" rel="noopener">Open-Meteo</a> (CC BY 4.0), Royal Irrigation Department.
+        Hackathon prototype, not an official flood warning.
+        <span class="th" lang="th">ข้อมูล: สำนักการระบายน้ำ กทม. ผ่าน POPNIX Flood, ThaiWater / สสน., Open-Meteo, กรมชลประทาน ต้นแบบสำหรับงาน<span class="nowrap">แฮกกาธอน</span> ไม่ใช่ประกาศเตือนภัยทางการ</span>
+      </p>
+    </footer>
+  </div>
+
+  <script src="js/i18n.js" defer></script>
+  <script src="js/api.js" defer></script>
+  <script src="js/scene.js" defer></script>
+  <script src="js/main.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GunWaree · Flood risk and rescue reports</title>
+  <meta name="description" content="Track flood risk, submit rescue reports, and follow your case from alert to resolution. ติดตามความเสี่ยงน้ำท่วม แจ้งเหตุขอความช่วยเหลือ และติดตามคำขอจนได้รับการช่วยเหลือ">
+  <meta name="theme-color" content="#1F6FB0">
+  <link rel="prefetch" href="home.html">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preload" as="image" href="assets/img/sky-blue-poster.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/intro.css">
+</head>
+<body class="splash">
+
+  <!-- Background: bright blue sky with white clouds (Miguel Á. Padriñán, Pexels license),
+       seen through wet glass while it rains. js/intro.js renders the glass, the rain and the title with WebGL. -->
+  <div class="intro__bg" aria-hidden="true">
+    <video class="intro__video" data-rain-video autoplay muted loop playsinline preload="auto"
+           poster="assets/img/sky-blue-poster.jpg">
+      <source src="assets/video/sky-blue-1440p.mp4" type="video/mp4" media="(min-width: 1600px)">
+      <source src="assets/video/sky-blue-1080p.mp4" type="video/mp4">
+    </video>
+    <canvas class="intro__glass" data-glass></canvas>
+  </div>
+
+  <header class="intro__top" data-fade>
+    <div class="lang-switch" role="group" data-i18n-aria="lang.label" aria-label="Language">
+      <button type="button" data-lang-btn="th" lang="th" aria-pressed="false">TH</button>
+      <button type="button" data-lang-btn="en" lang="en" aria-pressed="true">EN</button>
+    </div>
+  </header>
+
+  <main class="intro__stage">
+    <h1 class="intro__title">
+      <span class="visually-hidden">GunWaree</span>
+      <!-- WebGL draws the glass title into this slot. The SVG is the fallback without WebGL. -->
+      <span class="title-slot" data-title-slot aria-hidden="true">
+        <svg class="liquid" viewBox="0 0 1000 260" focusable="false">
+          <defs>
+            <filter id="lq-filter" x="-6%" y="-25%" width="112%" height="170%" color-interpolation-filters="sRGB">
+              <feTurbulence type="fractalNoise" baseFrequency="0.009 0.022" numOctaves="1" seed="7" result="noise"/>
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="7" xChannelSelector="R" yChannelSelector="G" result="rough"/>
+              <feGaussianBlur in="rough" stdDeviation="1.6" result="rough-soft"/>
+              <feColorMatrix in="rough-soft" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 14 -6" result="wave"/>
+              <feGaussianBlur in="wave" stdDeviation="3" result="soft"/>
+              <feSpecularLighting in="soft" surfaceScale="5" specularConstant="1.2" specularExponent="22" lighting-color="#FFFFFF" result="spec">
+                <fePointLight x="260" y="-60" z="230"/>
+              </feSpecularLighting>
+              <feComposite in="spec" in2="wave" operator="in" result="gloss"/>
+              <feComposite in="wave" in2="gloss" operator="arithmetic" k1="0" k2="1" k3="1" k4="0"/>
+            </filter>
+          </defs>
+          <g filter="url(#lq-filter)">
+            <text x="500" y="182" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.6">GunWaree</text>
+          </g>
+        </svg>
+      </span>
+    </h1>
+
+    <p class="intro__tag" data-fade data-i18n="brand.tagline">Stay informed. Stay prepared. Stay safe.</p>
+
+    <a class="enter" href="home.html" data-enter data-fade>
+      <span class="enter__label" data-i18n="intro.enter">Enter</span>
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11.5M11 5.5 15.5 10 11 14.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </main>
+
+  <footer class="intro__footer" data-fade>
+    <nav aria-label="Legal">
+      <ul role="list">
+        <li><a href="terms.html" data-i18n="legal.terms">Terms of Service</a></li>
+        <li><a href="privacy.html" data-i18n="legal.privacy">Privacy Policy</a></li>
+      </ul>
+    </nav>
+    <p data-i18n="legal.notice">Hackathon prototype, not an official flood warning. In an emergency call 191 or 1669.</p>
+    <p class="intro__credit">Video: Miguel Á. Padriñán, <a href="https://www.pexels.com/video/low-angle-shot-of-sky-with-clouds-moving-6772577/" rel="noopener">Pexels</a></p>
+  </footer>
+
+  <script src="js/lang.js"></script>
+  <script src="js/intro.js" defer></script>
+</body>
+</html>

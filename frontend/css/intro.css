@@ -1,0 +1,219 @@
+/* =========================================================
+   Intro (index.html): rain behind wet glass, liquid title, Enter
+   Builds on the tokens in style.css.
+   ========================================================= */
+
+.splash {
+  --intro-ink: #1F6FB0;
+  --intro-band: rgba(8, 40, 52, 0.62);   /* dark band so white text reads on white clouds */
+  --intro-text: #EAF6F8;
+  --intro-muted: rgba(234, 246, 248, 0.86);
+
+  min-height: 100vh;
+  min-height: 100svh;
+  overflow: hidden;
+  background: var(--intro-ink);
+  color: var(--intro-text);
+}
+
+/* ---------- Background ---------- */
+
+.intro__bg {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--intro-ink) url("../assets/img/sky-blue-poster.jpg") center / cover no-repeat;
+}
+
+/* The video stays in view (browsers pause muted video that leaves the viewport);
+   the WebGL canvas covers it and draws the blurred and refracted versions. */
+.intro__video {
+  position: absolute;
+  inset: -4%;
+  width: 108%;
+  height: 108%;
+  object-fit: cover;
+  filter: blur(6px) saturate(1.05);
+}
+
+.intro__glass {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 900ms var(--ease);
+}
+.splash.gl-ready .intro__glass { opacity: 1; }
+
+/* ---------- Stage ---------- */
+
+.intro__stage {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: var(--s-6);
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: var(--s-16) var(--gutter) 9rem;
+  text-align: center;
+  perspective: 900px;
+}
+
+.intro__title {
+  width: min(94vw, 1120px);
+  margin: 0;
+  transform-origin: 50% 55%;
+  will-change: transform;
+}
+
+.title-slot {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1000 / 260;
+}
+/* WebGL draws the glass title into the slot; the SVG only shows without WebGL */
+.splash.gl-ready .title-slot svg { visibility: hidden; }
+
+.liquid {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.liquid text {
+  font-family: var(--font-display);
+  font-size: 196px;
+  font-weight: 700;
+  letter-spacing: -5px;
+}
+
+.intro__tag {
+  margin-top: calc(var(--s-4) * -1);
+  padding: var(--s-1) var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--intro-band);
+  font-family: var(--font-display);
+  font-size: var(--fs-18);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--intro-text);
+}
+:lang(th) .intro__tag { font-family: var(--font-body); letter-spacing: 0; }
+
+/* ---------- Enter ---------- */
+
+.enter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-6);
+  min-height: 3.5rem;
+  margin-top: var(--s-4);
+  padding: var(--s-2) var(--s-6) var(--s-2) var(--s-8);
+  border: 1px solid rgba(234, 246, 248, 0.6);
+  border-radius: var(--r-md);
+  background: var(--intro-band);
+  color: var(--intro-text);
+  font-family: var(--font-display);
+  font-size: var(--fs-18);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+:lang(th) .enter { font-family: var(--font-body); letter-spacing: 0; }
+.enter svg { width: 20px; height: 20px; }
+.enter:hover {
+  background: var(--intro-text);
+  border-color: var(--intro-text);
+  color: var(--c-ink-900);
+}
+.enter:focus-visible {
+  outline: 2px solid var(--c-aqua-200);
+  outline-offset: 4px;
+  border-radius: var(--r-md);
+}
+
+/* ---------- Top bar ---------- */
+
+.intro__top {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 3;
+  padding: var(--s-4) var(--gutter);
+}
+
+/* ---------- Footer ---------- */
+
+.intro__footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s-2) var(--s-8);
+  padding: var(--s-3) var(--gutter);
+  font-size: var(--fs-12);
+  line-height: 1.6;
+  color: var(--intro-muted);
+  background: var(--intro-band);
+}
+.intro__footer ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.intro__footer a {
+  color: var(--intro-text);
+  text-decoration: underline;
+  text-decoration-color: rgba(234, 246, 248, 0.35);
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--dur-fast) var(--ease);
+}
+.intro__footer a:hover { text-decoration-color: currentColor; }
+.intro__footer a:focus-visible { outline-color: var(--c-aqua-200); }
+
+.intro__footer p { max-width: 42rem; }
+.intro__credit { white-space: nowrap; }
+
+/* ---------- Warp into the site ---------- */
+
+[data-fade] { transition: opacity 360ms var(--ease); }
+.is-warping [data-fade] { opacity: 0; pointer-events: none; }
+
+.is-warping .intro__title {
+  transform: translate3d(0, -2%, 620px);
+  opacity: 0;
+  transition:
+    transform 1500ms cubic-bezier(0.55, 0, 0.8, 0.2),
+    opacity 700ms cubic-bezier(0.55, 0, 1, 0.45) 650ms;
+}
+
+/* Without WebGL the blurred video is the background on its own */
+.splash.no-gl .intro__glass { display: none; }
+
+/* ---------- Small screens ---------- */
+
+@media (max-width: 640px) {
+  .intro__stage { gap: var(--s-4); padding-bottom: 12rem; }
+  .intro__tag { margin-top: 0; font-size: var(--fs-16); }
+  .enter { gap: var(--s-4); padding-left: var(--s-6); }
+  .intro__footer { justify-content: flex-start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-warping .intro__title { transform: none; }
+}

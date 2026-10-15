@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rescue reports · GunWaree</title>
+  <meta name="description" content="Send a rescue report and follow it from submission to resolution. แจ้งเหตุขอความช่วยเหลือและติดตามสถานะ">
+  <meta name="theme-color" content="#0A303A">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <script>
+    // Arriving through the intro warp: fade in from the white the warp ends on
+    try {
+      if (sessionStorage.getItem('gw_warp')) {
+        sessionStorage.removeItem('gw_warp');
+        document.documentElement.classList.add('is-arriving-sky');
+      }
+    } catch (e) { /* storage blocked */ }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+</head>
+<body class="app">
+
+  <!-- Background: bright blue sky with white clouds (Miguel Á. Padriñán, Pexels) with falling rain drawn by js/sky.js -->
+  <div class="sky" aria-hidden="true">
+    <video class="sky__video" data-sky-video autoplay muted loop playsinline preload="auto" poster="assets/img/sky-blue-poster.jpg">
+      <source src="assets/video/sky-blue-1080p.mp4" type="video/mp4">
+    </video>
+    <canvas class="sky__rain" data-sky-rain></canvas>
+    <div class="sky__shade"></div>
+  </div>
+
+  <div class="app-shell">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <a class="logo" href="index.html" aria-label="GunWaree">
+        <svg viewBox="0 0 24 30" aria-hidden="true">
+          <defs><clipPath id="logo-drop"><path d="M12 1.5C9.1 5.8 3.6 11.9 3.6 17.9a8.4 8.4 0 0 0 16.8 0c0-6-5.5-12.1-8.4-16.4Z"/></clipPath></defs>
+          <g clip-path="url(#logo-drop)">
+            <rect width="24" height="30" fill="#C4F7F2"/>
+            <path d="M0 18.6c3-2.3 6-2.3 9 0s6 2.3 9 0 6-2.3 9 0V30H0Z" fill="#7CEBE3"/>
+            <path d="M0 18.6c3-2.3 6-2.3 9 0s6 2.3 9 0 6-2.3 9 0" fill="none" stroke="#0A303A" stroke-width="1.7"/>
+          </g>
+        </svg>
+        <span>GunWaree</span>
+      </a>
+
+      <nav class="nav" data-i18n-aria="nav.label" aria-label="Main menu">
+        <p class="nav__eyebrow eyebrow" data-i18n="nav.label">Main menu</p>
+        <ul role="list">
+          <li>
+            <a class="nav__item" href="home.html">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.2 10 3.5l7 5.7V16a1 1 0 0 1-1 1h-3.5v-4.5h-5V17H4a1 1 0 0 1-1-1Z"/></svg>
+              <span data-i18n="nav.home">Home</span>
+            </a>
+          </li>
+          <li>
+            <span class="nav__item is-soon" aria-disabled="true">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 16h14"/><path d="M4 12.5 7.5 9l3 2.5L16 5.5"/><path d="M12.5 5.5H16V9"/></svg>
+              <span data-i18n="nav.risk">Risk prediction</span>
+              <span class="nav__soon" data-i18n="nav.soon">Soon</span>
+            </span>
+          </li>
+          <li>
+            <a class="nav__item is-active" href="reports.html" aria-current="page">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="12" height="14" rx="1.5"/><path d="M7.5 3.5V2.5h5v1"/><path d="M10 8v5M7.5 10.5h5"/></svg>
+              <span data-i18n="nav.reports">Rescue reports</span>
+            </a>
+          </li>
+          <li>
+            <a class="nav__item" href="dams.html">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h4l2 12H3Z"/><path d="M9.2 7.5H17M9.8 11H17M10.3 14.5H17"/></svg>
+              <span data-i18n="nav.dams">Dam levels</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="profile" data-profile></div>
+    </aside>
+
+    <!-- Main column -->
+    <div class="app-main">
+      <header class="topbar">
+        <a class="logo topbar__brand" href="index.html" aria-label="GunWaree">
+          <svg viewBox="0 0 24 30" aria-hidden="true">
+            <defs><clipPath id="logo-drop-top"><path d="M12 1.5C9.1 5.8 3.6 11.9 3.6 17.9a8.4 8.4 0 0 0 16.8 0c0-6-5.5-12.1-8.4-16.4Z"/></clipPath></defs>
+            <g clip-path="url(#logo-drop-top)">
+              <rect width="24" height="30" fill="#C4F7F2"/>
+              <path d="M0 18.6c3-2.3 6-2.3 9 0s6 2.3 9 0 6-2.3 9 0V30H0Z" fill="#7CEBE3"/>
+              <path d="M0 18.6c3-2.3 6-2.3 9 0s6 2.3 9 0 6-2.3 9 0" fill="none" stroke="#0A303A" stroke-width="1.7"/>
+            </g>
+          </svg>
+          <span>GunWaree</span>
+        </a>
+        <p class="topbar__place">
+          <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M9 16s5-4.6 5-8.6A5 5 0 0 0 4 7.4C4 11.4 9 16 9 16Z"/><circle cx="9" cy="7.3" r="1.8"/></svg>
+          <span data-i18n="top.location">Bangkok, Thailand</span>
+        </p>
+        <p class="data-status" data-status aria-live="polite"></p>
+
+        <div class="topbar__actions">
+          <div class="lang-switch" role="group" data-i18n-aria="lang.label" aria-label="Language">
+            <button type="button" data-lang-btn="th" lang="th" aria-pressed="false">TH</button>
+            <button type="button" data-lang-btn="en" lang="en" aria-pressed="true">EN</button>
+          </div>
+
+          <div class="bell">
+            <button class="bell__btn" type="button" aria-expanded="false" aria-controls="bell-panel" data-bell data-i18n-aria="bell.label" aria-label="Alerts">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M5 8.5a5 5 0 0 1 10 0c0 3.8 1.5 5.2 1.5 5.2h-13S5 12.3 5 8.5Z"/><path d="M8.3 16.2a1.8 1.8 0 0 0 3.4 0" stroke-linecap="round"/></svg>
+              <span class="bell__count" data-bell-count hidden></span>
+            </button>
+            <div class="bell__panel" id="bell-panel" data-bell-panel hidden>
+              <p class="bell__title" data-i18n="bell.title">Flood alerts</p>
+              <div data-bell-body></div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="content" id="main" tabindex="-1">
+        <div class="page-head">
+          <h1 data-i18n="reports.title">Rescue reports</h1>
+          <p class="page-head__sub" data-i18n="reports.sub">Ask for help and follow your request from submission to resolution.</p>
+        </div>
+
+        <!-- Two views: send a report, follow my reports (#new, #mine) -->
+        <div class="seg" role="tablist" data-i18n-aria="reports.tabs" aria-label="Rescue report views" data-tabs>
+          <span class="seg__thumb" aria-hidden="true" data-seg-thumb></span>
+          <button class="seg__tab" type="button" role="tab" id="tab-new" aria-controls="panel-new" aria-selected="true" data-tab="new">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="12" height="14" rx="1.5"/><path d="M7.5 3.5V2.5h5v1"/><path d="M10 8v5M7.5 10.5h5"/></svg>
+            <span data-i18n="reports.tabNew">Send a report</span>
+          </button>
+          <button class="seg__tab" type="button" role="tab" id="tab-mine" aria-controls="panel-mine" aria-selected="false" tabindex="-1" data-tab="mine">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h6.5L16 7v9.5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-12a1 1 0 0 1 1-1Z"/><path d="M8 10h6M8 13h4"/></svg>
+            <span data-i18n="reports.tabMine">My reports</span>
+            <span class="seg__count" data-mine-count hidden></span>
+          </button>
+        </div>
+
+        <!-- Send a report -->
+        <section class="card panel report-panel" id="panel-new" role="tabpanel" aria-labelledby="tab-new" data-panel="new">
+          <p class="emergency">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5 8 7 6.2 8.3a9 9 0 0 0 5.5 5.5L13 12l3.5 1.5V16a1.5 1.5 0 0 1-1.5 1.5A12.5 12.5 0 0 1 2.5 5 1.5 1.5 0 0 1 4 3.5Z"/></svg>
+            <span data-i18n="reports.emergency">Life in danger? Call 1669 (medical) or 191 (police) first. This prototype is not watched around the clock.</span>
+          </p>
+
+          <div class="gate" data-gate="new" hidden></div>
+
+          <form class="report-form" data-report-form novalidate hidden>
+            <div class="field" data-field="description">
+              <div class="field__top">
+                <label class="field__label" for="r-desc"><span data-i18n="form.desc">What is happening?</span> <span class="req" data-i18n="form.required">Required</span></label>
+                <span class="counter" data-counter aria-live="polite"></span>
+              </div>
+              <div class="input input--area">
+                <textarea id="r-desc" name="description" rows="4" maxlength="500" required aria-describedby="r-desc-error" data-i18n-ph="form.descHint"></textarea>
+              </div>
+              <p class="field__error" id="r-desc-error" hidden></p>
+            </div>
+
+            <fieldset class="field where" data-field="where">
+              <legend class="field__label"><span data-i18n="form.where">Where are you?</span> <span class="req" data-i18n="form.required">Required</span></legend>
+              <p class="field__hint" data-i18n="form.whereHint">Type an address, pin the spot on the map, or both.</p>
+              <label class="visually-hidden" for="r-address" data-i18n="form.address">Address</label>
+              <div class="input">
+                <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M9 16s5-4.6 5-8.6A5 5 0 0 0 4 7.4C4 11.4 9 16 9 16Z"/><circle cx="9" cy="7.3" r="1.8"/></svg>
+                <input id="r-address" name="address" type="text" maxlength="500" autocomplete="street-address" aria-describedby="r-where-error" data-i18n-ph="form.addressPh">
+              </div>
+
+              <div class="pinmap">
+                <div class="pinmap__map" data-map role="application" data-i18n-aria="form.map" aria-label="Map: click or tap to pin where help is needed"></div>
+                <div class="pinmap__bar">
+                  <p class="pinmap__readout" data-pin-readout aria-live="polite"></p>
+                  <div class="pinmap__actions">
+                    <button class="chip-btn" type="button" data-locate>
+                      <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="9" cy="9" r="5.25"/><circle cx="9" cy="9" r="1.6"/><path d="M9 1.5v2.2M9 14.3v2.2M1.5 9h2.2M14.3 9h2.2" stroke-linecap="round"/></svg>
+                      <span data-i18n="form.locate">Use my location</span>
+                    </button>
+                    <button class="chip-btn" type="button" data-clear-pin hidden>
+                      <span data-i18n="form.clearPin">Remove pin</span>
+                    </button>
+                  </div>
+                </div>
+                <p class="field__hint" data-i18n="form.pinNote">The pin is sent with your report so rescue teams can find you.</p>
+              </div>
+              <p class="field__error" id="r-where-error" hidden></p>
+            </fieldset>
+
+            <div class="report-form__foot">
+              <div class="field" data-field="phone">
+                <label class="field__label" for="r-phone" data-i18n="form.phone">Contact number</label>
+                <div class="input">
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5 8 7 6.2 8.3a9 9 0 0 0 5.5 5.5L13 12l3.5 1.5V16a1.5 1.5 0 0 1-1.5 1.5A12.5 12.5 0 0 1 2.5 5 1.5 1.5 0 0 1 4 3.5Z"/></svg>
+                  <input id="r-phone" name="phone" type="tel" inputmode="tel" maxlength="20" autocomplete="tel" placeholder="08x xxx xxxx" aria-describedby="r-phone-hint r-phone-error">
+                </div>
+                <p class="field__hint" id="r-phone-hint" data-i18n="form.phoneHint">Optional. Rescue teams may call this number.</p>
+                <p class="field__error" id="r-phone-error" hidden></p>
+              </div>
+              <button class="btn submit-btn" type="submit" data-submit>
+                <span data-submit-label data-i18n="form.submit">Send report</span>
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h12M11 5.5 15.5 10 11 14.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+            <p class="form-alert" role="alert" data-form-alert></p>
+          </form>
+
+          <div class="sent" data-sent tabindex="-1" hidden>
+            <div class="sent__mark" aria-hidden="true">
+              <span class="sent__ring"></span><span class="sent__ring sent__ring--2"></span>
+              <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="2.5"/><path class="sent__tick" d="M15 24.5 21.5 31 33.5 18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <h2 class="sent__title" data-i18n="form.sentTitle">Report sent</h2>
+            <p class="sent__id" data-sent-id></p>
+            <p class="sent__text" data-sent-text></p>
+            <div class="sent__actions">
+              <a class="btn sent__btn" href="#mine" data-i18n="form.viewMine">Follow it in My reports</a>
+              <button class="btn btn--secondary sent__btn" type="button" data-another data-i18n="form.another">Send another report</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- My reports -->
+        <section class="report-panel" id="panel-mine" role="tabpanel" aria-labelledby="tab-mine" data-panel="mine" hidden>
+          <div class="card panel gate-card" data-gate="mine" hidden></div>
+          <div data-mine hidden>
+            <ul class="tally" role="list">
+              <li class="tally__item" data-tally="all">
+                <span class="tally__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><rect x="6.5" y="6.5" width="10" height="11" rx="1.5"/><path d="M13.5 6.5V4a1.5 1.5 0 0 0-1.5-1.5H5A1.5 1.5 0 0 0 3.5 4v8.5A1.5 1.5 0 0 0 5 14h1.5"/></svg></span>
+                <span class="tally__num" data-tally-num>0</span>
+                <span class="tally__label" data-i18n="mine.all">All reports</span>
+              </li>
+              <li class="tally__item" data-tally="new">
+                <span class="tally__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 6.2V10l2.6 1.6"/></svg></span>
+                <span class="tally__num" data-tally-num>0</span>
+                <span class="tally__label" data-status-label="new">Received</span>
+              </li>
+              <li class="tally__item" data-tally="in_progress">
+                <span class="tally__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="3"/><path d="M5 5l2.9 2.9M15 5l-2.9 2.9M5 15l2.9-2.9M15 15l-2.9-2.9"/></svg></span>
+                <span class="tally__num" data-tally-num>0</span>
+                <span class="tally__label" data-status-label="in_progress">In progress</span>
+              </li>
+              <li class="tally__item" data-tally="resolved">
+                <span class="tally__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="m7 10.2 2 2 4-4.2"/></svg></span>
+                <span class="tally__num" data-tally-num>0</span>
+                <span class="tally__label" data-status-label="resolved">Completed</span>
+              </li>
+            </ul>
+
+            <section class="card panel" aria-labelledby="mine-title">
+              <div class="panel__head">
+                <h2 id="mine-title" data-i18n="mine.listTitle">Your reports</h2>
+                <p class="card__time" data-mine-time></p>
+              </div>
+              <ol class="report-list" role="list" data-report-list>
+                <li class="report report--skeleton"><span class="sk-line sk-line--sm"></span><span class="sk-line sk-line--md"></span></li>
+                <li class="report report--skeleton"><span class="sk-line sk-line--sm"></span><span class="sk-line sk-line--md"></span></li>
+              </ol>
+              <p class="visually-hidden" aria-live="polite" data-mine-announce></p>
+            </section>
+          </div>
+        </section>
+      </main>
+
+      <footer class="app-footer">
+        <ul role="list">
+          <li><a href="terms.html" data-i18n="legal.terms">Terms of Service</a></li>
+          <li><a href="privacy.html" data-i18n="legal.privacy">Privacy Policy</a></li>
+        </ul>
+        <p data-i18n="legal.notice">Hackathon prototype, not an official flood warning. In an emergency call 191 or 1669.</p>
+        <p data-i18n="legal.credits">Data: Bangkok Drainage and Sewerage Office via POPNIX Flood, ThaiWater / HII, Open-Meteo (CC BY 4.0), Royal Irrigation Department.</p>
+        <p data-i18n="legal.media">Sky video: Miguel Á. Padriñán. Bangkok photo: Pexels.</p>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Bottom tabs on small screens -->
+  <nav class="tabbar" data-i18n-aria="nav.label" aria-label="Main menu">
+    <a class="nav__item" href="home.html">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.2 10 3.5l7 5.7V16a1 1 0 0 1-1 1h-3.5v-4.5h-5V17H4a1 1 0 0 1-1-1Z"/></svg>
+      <span data-i18n="nav.home">Home</span>
+    </a>
+    <span class="nav__item is-soon" aria-disabled="true">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 16h14"/><path d="M4 12.5 7.5 9l3 2.5L16 5.5"/><path d="M12.5 5.5H16V9"/></svg>
+      <span data-i18n="nav.risk">Risk prediction</span>
+    </span>
+    <a class="nav__item is-active" href="reports.html" aria-current="page">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="12" height="14" rx="1.5"/><path d="M7.5 3.5V2.5h5v1"/><path d="M10 8v5M7.5 10.5h5"/></svg>
+      <span data-i18n="nav.reports">Rescue reports</span>
+    </a>
+    <a class="nav__item" href="dams.html">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h4l2 12H3Z"/><path d="M9.2 7.5H17M9.8 11H17M10.3 14.5H17"/></svg>
+      <span data-i18n="nav.dams">Dam levels</span>
+    </a>
+  </nav>
+
+  <script src="js/lang.js"></script>
+  <script src="js/i18n.js" defer></script>
+  <script src="js/api.js" defer></script>
+  <script src="js/shell.js" defer></script>
+  <script src="js/sky.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" defer></script>
+  <script src="js/reports.js" defer></script>
+</body>
+</html>

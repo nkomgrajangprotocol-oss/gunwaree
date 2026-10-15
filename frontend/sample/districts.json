@@ -1,0 +1,352 @@
+[
+ {
+  "district": "พระนคร",
+  "road_points": 1,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:15:00"
+ },
+ {
+  "district": "ดุสิต",
+  "road_points": 5,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:15:00"
+ },
+ {
+  "district": "หนองจอก",
+  "road_points": 0,
+  "max_depth_cm": null,
+  "level": "nodata",
+  "measured_at": null
+ },
+ {
+  "district": "บางรัก",
+  "road_points": 3,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "บางเขน",
+  "road_points": 10,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "บางกะปิ",
+  "road_points": 10,
+  "max_depth_cm": 5.0,
+  "level": "medium",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "ปทุมวัน",
+  "road_points": 4,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:15:00"
+ },
+ {
+  "district": "ป้อมปราบศัตรูพ่าย",
+  "road_points": 2,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:15:00"
+ },
+ {
+  "district": "พระโขนง",
+  "road_points": 4,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "มีนบุรี",
+  "road_points": 3,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "ลาดกระบัง",
+  "road_points": 8,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "ยานนาวา",
+  "road_points": 3,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "สัมพันธวงศ์",
+  "road_points": 1,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:15:00"
+ },
+ {
+  "district": "พญาไท",
+  "road_points": 10,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "ธนบุรี",
+  "road_points": 1,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "บางกอกใหญ่",
+  "road_points": 2,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "ห้วยขวาง",
+  "road_points": 5,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "คลองสาน",
+  "road_points": 1,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:15:00"
+ },
+ {
+  "district": "ตลิ่งชัน",
+  "road_points": 2,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "บางกอกน้อย",
+  "road_points": 2,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:15:00"
+ },
+ {
+  "district": "บางขุนเทียน",
+  "road_points": 4,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "ภาษีเจริญ",
+  "road_points": 4,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "หนองแขม",
+  "road_points": 2,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "ราษฎร์บูรณะ",
+  "road_points": 0,
+  "max_depth_cm": null,
+  "level": "nodata",
+  "measured_at": null
+ },
+ {
+  "district": "บางพลัด",
+  "road_points": 1,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:15:00"
+ },
+ {
+  "district": "ดินแดง",
+  "road_points": 13,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "บึงกุ่ม",
+  "road_points": 6,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "สาทร",
+  "road_points": 10,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "บางซื่อ",
+  "road_points": 2,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "จตุจักร",
+  "road_points": 13,
+  "max_depth_cm": 5.0,
+  "level": "medium",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "บางคอแหลม",
+  "road_points": 2,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "ประเวศ",
+  "road_points": 4,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "คลองเตย",
+  "road_points": 9,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "สวนหลวง",
+  "road_points": 6,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "จอมทอง",
+  "road_points": 2,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "ดอนเมือง",
+  "road_points": 3,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "ราชเทวี",
+  "road_points": 12,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "ลาดพร้าว",
+  "road_points": 7,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "วัฒนา",
+  "road_points": 10,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "บางแค",
+  "road_points": 6,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "หลักสี่",
+  "road_points": 6,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "สายไหม",
+  "road_points": 2,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "คันนายาว",
+  "road_points": 1,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "สะพานสูง",
+  "road_points": 0,
+  "max_depth_cm": null,
+  "level": "nodata",
+  "measured_at": null
+ },
+ {
+  "district": "วังทองหลาง",
+  "road_points": 9,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "คลองสามวา",
+  "road_points": 0,
+  "max_depth_cm": null,
+  "level": "nodata",
+  "measured_at": null
+ },
+ {
+  "district": "บางนา",
+  "road_points": 9,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "ทวีวัฒนา",
+  "road_points": 0,
+  "max_depth_cm": null,
+  "level": "nodata",
+  "measured_at": null
+ },
+ {
+  "district": "ทุ่งครุ",
+  "road_points": 3,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ },
+ {
+  "district": "บางบอน",
+  "road_points": 7,
+  "max_depth_cm": 0.0,
+  "level": "safe",
+  "measured_at": "2026-10-15 15:20:00"
+ }
+]

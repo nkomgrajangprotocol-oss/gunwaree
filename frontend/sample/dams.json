@@ -1,0 +1,68 @@
+[
+ {
+  "name": "ภูมิพล",
+  "province": "ตาก",
+  "lat": 17.24,
+  "lon": 98.97,
+  "pct": 70.06,
+  "volume": 9431.23,
+  "inflow": 23.21,
+  "outflow": 2.0,
+  "capacity": 13462.0,
+  "source": "rid",
+  "measured_at": "2026-10-15"
+ },
+ {
+  "name": "สิริกิติ์",
+  "province": "อุตรดิตถ์",
+  "lat": 17.76389,
+  "lon": 100.56333,
+  "pct": 81.67,
+  "volume": 7767.28,
+  "inflow": 11.12,
+  "outflow": 8.01,
+  "capacity": 9510.0,
+  "source": "rid",
+  "measured_at": "2026-10-15"
+ },
+ {
+  "name": "แควน้อยบำรุงแดน",
+  "province": "พิษณุโลก",
+  "lat": 17.18407,
+  "lon": 100.41524,
+  "pct": 83.9,
+  "volume": 787.8,
+  "inflow": 3.86,
+  "outflow": 0.86,
+  "capacity": 939.0,
+  "source": "rid",
+  "measured_at": "2026-10-15"
+ },
+ {
+  "name": "ป่าสักชลสิทธิ์",
+  "province": "ลพบุรี",
+  "lat": 14.85666,
+  "lon": 101.07687,
+  "pct": 92.28,
+  "volume": 804.26,
+  "inflow": 12.95,
+  "outflow": 17.35,
+  "capacity": 871.5,
+  "source": "rid",
+  "measured_at": "2026-10-15"
+ },
+ {
+  "name": "เจ้าพระยา",
+  "province": "ชัยนาท",
+  "lat": 15.16384,
+  "lon": 100.18792,
+  "pct": null,
+  "volume": null,
+  "inflow": null,
+  "outflow": 155.52,
+  "capacity": null,
+  "source": "popnix",
+  "measured_at": "2026-10-15 14:00:00",
+  "note": "ค่าการไหลสถานี C.13 (1,800 ลบ.ม./วินาที) แปลงหน่วยแล้ว"
+ }
+]
