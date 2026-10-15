@@ -1,18 +1,25 @@
 // FloodSense - ESP32 DevKit V1 + HC-SR04 + relay pump + 3 LEDs
 // Board: "ESP32 Dev Module". No extra libraries needed.
+//
+// REQUIRES secrets.h next to this file (defines WIFI_SSID, WIFI_PASS, DEVICE_KEY).
+// Copy secrets.example.h to secrets.h and fill in real values. secrets.h is in .gitignore - never commit it.
+//
+// TODO(Pai): confirm the sensor. readDistanceCm() below is written for HC-SR04 (trig/echo).
+//            The plan mentions A02YYUW (UART) - if that is used, the read code must change.
 
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <WiFiClientSecure.h>
+#include "secrets.h"
 
 // ===================== CONFIG =====================
-#define SIMULATE_SENSOR 1          // 1 = fake water level (no sensor needed), 0 = real HC-SR04
+#define SIMULATE_SENSOR 0          // 0 = real sensor. 1 = fake water level for Wokwi only - never use with the real system
 
-const char* WIFI_SSID = "Wokwi-GUEST";   // change on real hardware
-const char* WIFI_PASS = "";
-const char* POST_URL  = "http://YOUR-BACKEND/api/level";   // ask Captain
-const char* GET_URL   = "http://YOUR-BACKEND/api/pump";    // ask Captain
-const char* API_KEY   = "";                                // leave "" if not needed
+const char* BASE_URL  = "https://gunwaree-production.up.railway.app";
+const char* POST_PATH = "/device/readings";
+const char* PUMP_PATH = "/device/pump-command?region=bangkok_test";
 const char* DEVICE_ID = "esp32-01";
+const uint32_t MAX_RUN_CAP_S = 90;     // never run longer than this, whatever the backend sends
 
 // TODO: replace with real measurements
 const float SENSOR_HEIGHT_CM = 50.0;   // sensor face -> bottom of container
@@ -28,8 +35,8 @@ const uint32_t DEFAULT_MAX_RUN_S = 60;
 // Pins
 const int TRIG_PIN = 5;
 const int ECHO_PIN = 18;                // MUST go through a voltage divider (1k + 2k) - Echo is 5V
-const int RELAY_PIN = 26;
-const bool RELAY_ACTIVE_LOW = true;     // most relay modules: LOW = ON
+const int RELAY_PIN = 23;
+const bool RELAY_ACTIVE_LOW = false;     // most relay modules: LOW = ON
 const int LED_G = 25, LED_Y = 27, LED_R = 33;
 // ==================================================
 
@@ -113,6 +120,7 @@ void handleCommand(String body) {
       int i = body.indexOf("\"max_run_s\":");
       uint32_t s = (i >= 0) ? body.substring(i + 12).toInt() : 0;
       if (s == 0) s = DEFAULT_MAX_RUN_S;
+      if (s > MAX_RUN_CAP_S) s = MAX_RUN_CAP_S;
       maxRunMs = s * 1000UL;
       pumpOn = true;
       pumpStart = millis();
@@ -123,14 +131,20 @@ void handleCommand(String body) {
 
 void addHeaders(HTTPClient &http) {
   http.addHeader("Content-Type", "application/json");
-  if (strlen(API_KEY) > 0) http.addHeader("Authorization", String("Bearer ") + API_KEY);
+  http.addHeader("X-Device-Key", DEVICE_KEY);   // never print DEVICE_KEY to Serial
 }
+
+// HTTPS without certificate check (setInsecure): accepted for this prototype.
+// Risk: anyone who can intercept the traffic (e.g. on the same Wi-Fi) could impersonate the backend
+// or read X-Device-Key. Add the server's root CA with client.setCACert() if there is time.
 
 void pollPump() {
   if (WiFi.status() != WL_CONNECTED) { failSafe(); return; }
+  WiFiClientSecure client;
+  client.setInsecure();
   HTTPClient http;
-  http.setTimeout(3000);
-  http.begin(GET_URL);
+  http.begin(client, String(BASE_URL) + PUMP_PATH);
+  http.setTimeout(5000);
   addHeaders(http);
   int code = http.GET();
   if (code == 200) handleCommand(http.getString());
@@ -144,12 +158,14 @@ void postLevel() {
   snprintf(body, sizeof(body),
            "{\"device_id\":\"%s\",\"distance_cm\":%.1f,\"water_level_cm\":%.1f,\"status\":\"%s\"}",
            DEVICE_ID, distanceCm, levelCm, STATUS_NAMES[status]);
+  WiFiClientSecure client;
+  client.setInsecure();
   HTTPClient http;
-  http.setTimeout(3000);
-  http.begin(POST_URL);
+  http.begin(client, String(BASE_URL) + POST_PATH);
+  http.setTimeout(5000);
   addHeaders(http);
   int code = http.POST(body);
-  Serial.printf("POST %s -> %d\n", body, code);
+  Serial.printf("POST -> %d  %s\n", code, body);   // body has no key
   http.end();
 }
 
@@ -166,6 +182,7 @@ void sampleTick(uint32_t now) {
     lastGoodMs = now;
   } else if (now - lastGoodMs > 10000) {                       // sensor fault
     Serial.println("Sensor fault: no valid reading");
+    haveReading = false;                                       // stop re-sending the last value with a new timestamp
     failSafe();
     return;
   } else if (!haveReading) {
