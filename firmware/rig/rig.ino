@@ -35,8 +35,8 @@ const uint32_t DEFAULT_MAX_RUN_S = 60;
 // Pins
 const int TRIG_PIN = 5;
 const int ECHO_PIN = 18;                // MUST go through a voltage divider (1k + 2k) - Echo is 5V
-const int RELAY_PIN = 26;
-const bool RELAY_ACTIVE_LOW = true;     // most relay modules: LOW = ON
+const int RELAY_PIN = 23;
+const bool RELAY_ACTIVE_LOW = false;     // most relay modules: LOW = ON
 const int LED_G = 25, LED_Y = 27, LED_R = 33;
 // ==================================================
 
