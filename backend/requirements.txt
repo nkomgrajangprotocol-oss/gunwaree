@@ -3,6 +3,3 @@ uvicorn
 requests
 bcrypt
 python-dotenv
-scikit-learn
-joblib
-pandas
