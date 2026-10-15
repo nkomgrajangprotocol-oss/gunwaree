@@ -56,6 +56,6 @@ class PumpCommandIn(BaseModel):
 
 class DeviceReadingIn(BaseModel):
     device_id: str = Field(pattern=r"^esp32-[0-9]{2}$")  # เช่น esp32-01
-    water_level_cm: float
+    water_level_cm: float = Field(ge=-50, le=1000)
     status: Literal["green", "yellow", "red"]
     distance_cm: Optional[float] = None  # ไม่บังคับ ไว้ตรวจปัญหา backend ไม่ใช้คำนวณ
