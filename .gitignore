@@ -16,3 +16,7 @@ __pycache__/
 Thumbs.db
 *.log
 *.bak
+
+# model artifacts
+*.joblib
+backend/models/
