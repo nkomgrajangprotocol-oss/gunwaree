@@ -4,7 +4,7 @@
 
 > **ไม่ใช่ประกาศเตือนภัยทางการ** นี่คือระบบต้นแบบสำหรับงานแฮกกาธอน ข้อมูลมาจากแหล่งสาธารณะและอาจล่าช้า การแจ้งเหตุในระบบนี้ถึงเฉพาะผู้ดูแลของโครงการ ไม่ถูกส่งถึงหน่วยกู้ภัย หากเป็นเหตุฉุกเฉินจริง โทร 191 (เหตุฉุกเฉินทั่วไป) หรือ 1784 (กรมป้องกันและบรรเทาสาธารณภัย) เหตุเจ็บป่วยฉุกเฉินโทร 1669
 
-**English TL;DR:** GunWaree is a hackathon prototype that collects public water, rain and road-flooding data, shows it on a web app, and gives a rule-based flood level for the Chao Phraya river at Ayutthaya (station 39). It also includes an ESP32 water-level test rig that reports to the same backend and can receive pump commands from an admin. We tested machine-learning models against the simple rule, found that only 5 independent flood events exist in six years of data (too few to prove a model is better), and shipped the rule. It is not an official warning system.
+**English TL;DR:** GunWaree is a hackathon prototype that collects public water, rain and road-flooding data, shows it on a web app, and gives a rule-based flood level for the Chao Phraya river at Ayutthaya (station 39). It also includes an ESP32 water-level test rig that reports to the same backend and can receive pump commands from an admin (the demo drives only a relay LED: no real pump is connected because one fail-safe test failed, see "Test status"). We tested machine-learning models against the simple rule, found that only 5 independent flood events exist in six years of data (too few to prove a model is better), and shipped the rule. It is not an official warning system.
 
 ## ลิงก์
 
@@ -37,7 +37,7 @@
 
 **ชุดทดลอง ESP32 (ฮาร์ดแวร์)**
 - วัดระดับน้ำในภาชนะด้วยเซนเซอร์อัลตราโซนิก ส่งค่าเข้า backend ผ่าน HTTPS
-- ถามคำสั่งปั๊มจาก backend ทุก 5 วินาที สั่งรีเลย์เปิดได้ครั้งละไม่เกิน 60 วินาที ปิดเองเมื่อติดต่อ backend ไม่ได้ (ดู "สถานะการทดสอบ")
+- ถามคำสั่งปั๊มจาก backend ทุก 5 วินาที สั่งรีเลย์เปิดได้ครั้งละไม่เกิน 60 วินาที ปิดทันทีเมื่อ Wi-Fi หลุด (ทดสอบแล้ว) แต่**ไม่ผ่านการทดสอบ**กรณีต่อ Wi-Fi อยู่แต่ไม่มีอินเทอร์เน็ต จึงยังไม่ต่อปั๊มจริง เดโมใช้ไฟ LED บนโมดูลรีเลย์แทนปั๊ม (ดู "สถานะการทดสอบ")
 
 ## สถาปัตยกรรม
 
@@ -125,10 +125,15 @@ lead time คือจำนวนชั่วโมงที่เตือน�
 | Backend | ทดสอบกรณีสิทธิ์และรหัสสถานะของทุก endpoint กับฐานข้อมูลชั่วคราว (91 กรณีผ่าน) และทดสอบบน Railway จริง |
 | หน้าเว็บ | ทดสอบในเบราว์เซอร์กับ backend จริง (16 ต.ค.) ยังไม่ได้ทดสอบทุกเบราว์เซอร์หรืออุปกรณ์ |
 | ESP32 → backend | ทดสอบแล้ว: ส่งค่า `POST /device/readings` สำเร็จ ค่าตรงกับที่ backend เห็น |
-| ESP32 รีเลย์ (ไม่ต่อปั๊ม) | ทดสอบแล้ว: สั่งเปิดจาก admin ไฟรีเลย์ติดภายในราว 1 วินาที ดับเองราว 60 วินาที สั่งปิดแล้วดับ ตอนบูตไม่ติด 8 จาก 8 ครั้ง (โมดูลเป็น active-HIGH) |
-| **ยังไม่ได้ทดสอบ** | fail-safe บนบอร์ด (ปิด Wi-Fi ขณะรีเลย์ติด พร้อมจับเวลา), ปั๊มจริง, วงจรฝั่งโหลด, ค่าเกณฑ์สีของเซนเซอร์ที่วัดจริง |
+| ESP32 รีเลย์ (ไม่ต่อปั๊ม) | ทดสอบแล้ว: สั่งเปิดจาก admin ไฟรีเลย์ติดภายใน 1.7 วินาทีในรอบวัด ดับเองราว 1 นาที (ตัวจับเวลา 60 วินาที) ตอนบูตไม่ติด 8 จาก 8 ครั้ง (โมดูลเป็น active-HIGH) |
+| ESP32 สั่งปิดกลางทาง | ทดสอบแล้ว: สั่งเปิดแล้วสั่งปิด ไฟดับภายใน 5 วินาที (ไม่ได้วัดละเอียด) |
+| ESP32 fail-safe: Wi-Fi หลุด | ทดสอบแล้ว: ผ่าน ปิด hotspot ทั้งตัวขณะรีเลย์ติด ไฟดับราว 3 วินาที |
+| **ESP32 fail-safe: ต่อ Wi-Fi อยู่แต่ไม่มีอินเทอร์เน็ต** | **ไม่ผ่าน:** ปิดข้อมูลมือถือขณะรีเลย์ติด (Wi-Fi ยังต่ออยู่) รีเลย์ไม่ดับภายใน 90 วินาที ทั้งที่ตัวจับเวลาตั้งไว้ 60 วินาที สมมติฐาน (ยังไม่ได้ยืนยัน): `loop()` ถูกการเรียก HTTPS ที่รอ timeout ค้างไว้ ตัวจับเวลาจึงไม่ถูกเช็กตรงเวลา เราจึงไม่ต่อปั๊มจริง |
+| **ยังไม่ได้ทดสอบ** | ปั๊มจริง, วงจรฝั่งโหลด, ค่าเกณฑ์สีของเซนเซอร์ที่วัดจริง |
 
 ค่าระดับน้ำของชุดทดลองที่เห็นบนเว็บอาจยังไม่ตรงน้ำจริง เพราะ `SENSOR_HEIGHT_CM`, `YELLOW_CM`, `RED_CM` ในโค้ดบอร์ดต้องตั้งตามภาชนะที่ใช้
+
+**เดโมนี้ไม่ต่อปั๊มจริง** ใช้ไฟ LED บนโมดูลรีเลย์แสดงผลคำสั่งจาก admin แทน (admin สั่ง, บอร์ดรับคำสั่ง, รีเลย์ตอบสนอง) เหตุผลคือผลทดสอบ fail-safe ข้างบนยังไม่ผ่านครบ และปั๊มเกี่ยวข้องกับน้ำและไฟฟ้า
 
 ## วิธีใช้งานเว็บเดโม
 
@@ -180,7 +185,7 @@ cd backend
 2. ในโฟลเดอร์ `firmware/rig/` คัดลอก `secrets.example.h` เป็น `secrets.h` แล้วใส่ `WIFI_SSID`, `WIFI_PASS` (ต้องเป็น Wi-Fi 2.4 GHz ที่ออกอินเทอร์เน็ตได้) และ `DEVICE_KEY` (ต้องตรงกับค่าบน backend) `secrets.h` ไม่ขึ้น GitHub
 3. ตั้งค่าที่หัว `rig.ino`: `SIMULATE_SENSOR` ต้องเป็น `0` สำหรับของจริง (1 ใช้ทดสอบโดยไม่มีเซนเซอร์เท่านั้น), `SENSOR_HEIGHT_CM` (ระยะจากหน้าเซนเซอร์ถึงก้นภาชนะ), `YELLOW_CM`, `RED_CM`, และ `RELAY_ACTIVE_LOW` (โมดูลของเราเป็น active-HIGH จึงตั้งเป็น `false` ให้ทดสอบโมดูลของคุณก่อน)
 4. กด Verify และ Upload เปิด Serial Monitor ที่ 115200 ควรเห็น `POST -> 201` ทุก 10 วินาที (ทุก 3 วินาทีเมื่อสถานะเหลืองหรือแดง) แล้วตรวจที่ `GET /stations/latest?kind=canal&scope=bangkok_test` ว่าเห็น `esp32-01`
-5. **ความปลอดภัยของปั๊ม:** ต่อฝั่งโหลดของรีเลย์ที่ขา `COM` กับ `NO` (ไม่ใช่ `NC`) ใช้ไฟเลี้ยงปั๊มแยกจาก ESP32 กราวด์ร่วมกัน ใส่ไดโอด flyback ถ้าเป็นโซลินอยด์ และ**อย่าต่อปั๊มจริงจนกว่าจะทดสอบ fail-safe** (ถอดโหลดแล้วดูแค่ไฟ LED บนโมดูลรีเลย์ก่อน)
+5. **ความปลอดภัยของปั๊ม:** ต่อฝั่งโหลดของรีเลย์ที่ขา `COM` กับ `NO` (ไม่ใช่ `NC`) ใช้ไฟเลี้ยงปั๊มแยกจาก ESP32 กราวด์ร่วมกัน ใส่ไดโอด flyback ถ้าเป็นโซลินอยด์ **firmware เวอร์ชันนี้ไม่ผ่านการทดสอบ fail-safe** กรณีต่อ Wi-Fi อยู่แต่ไม่มีอินเทอร์เน็ต (รีเลย์ไม่ดับภายใน 90 วินาที) **อย่าต่อปั๊มจริงจนกว่าจะแก้และทดสอบซ้ำ** ถอดโหลดแล้วดูแค่ไฟ LED บนโมดูลรีเลย์ ทางแก้ที่เราเสนอแต่ยังไม่ได้ทำ: แยกตัวป้องกันเวลาปั๊มเป็นงานแยก (FreeRTOS task) ที่ไม่เรียกเครือข่าย และลด timeout ของการเรียก HTTPS
 
 ### โมเดล (สคริปต์ทดลอง ไม่ถูกเรียกตอนรัน API)
 
@@ -229,6 +234,7 @@ docs/plan.md    แผนงาน การตัดสินใจ และ�
 - ไม่มี rate limit ที่หน้า login
 - ไม่มี logout ฝั่ง server: กดออกจากระบบจะลบ token ในเบราว์เซอร์ แต่ token ยังใช้ได้ที่ server ราว 24 ชั่วโมง
 - การลืมรหัสผ่านเป็นโหมดจำลอง: ระบบไม่ส่งอีเมล รหัสรีเซ็ตถูกพิมพ์ในบันทึกของ server ซึ่งทีมงานเข้าถึงได้ (ในฐานข้อมูลเก็บเป็นค่าแฮช)
+- fail-safe ของ ESP32 ยังมีช่องโหว่: ถ้าต่อ Wi-Fi อยู่แต่ไม่มีอินเทอร์เน็ต รีเลย์ไม่ดับตามเวลา 60 วินาทีที่ตั้งไว้ (ทดสอบแล้วไม่ผ่าน ดับไม่ทันภายใน 90 วินาที) เราจึงไม่ต่อปั๊มจริงในเดโม และไม่ควรต่อปั๊มจริงกับ firmware เวอร์ชันนี้
 - ESP32 ใช้ HTTPS แบบไม่ตรวจใบรับรอง (`setInsecure()`) ผู้ที่ดักทราฟฟิกในวง Wi-Fi เดียวกันอาจเห็น `X-Device-Key` ได้ ยอมรับสำหรับต้นแบบ
 - CORS อนุญาตเฉพาะโดเมนเว็บเดโม (และ Live Server ระหว่างพัฒนา)
 - ข้อมูลที่ผู้ใช้ส่ง (บัญชี การแจ้งเหตุ) เป็นข้อมูลทดสอบ ผู้ดูแลระบบเห็นชื่อผู้ใช้ ที่อยู่ เบอร์โทร และพิกัดของรายการแจ้งเหตุ และอาจถูกลบเมื่อจบงาน ดู `privacy.html` และ `terms.html` ในเว็บ
