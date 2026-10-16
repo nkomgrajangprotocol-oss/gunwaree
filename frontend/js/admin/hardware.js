@@ -338,9 +338,16 @@
     ok.focus();
   }
 
+  // The demo box (js/demo.js) and the admin guide (js/guide.js) go first: the notice waits for them to close
+  function afterOthers(fn) {
+    if (GW.demo && GW.demo.busy()) { document.addEventListener('gw:demo-closed', function () { afterOthers(fn); }, { once: true }); return; }
+    if (GW.guide && GW.guide.busy()) { document.addEventListener('gw:guide-closed', function () { afterOthers(fn); }, { once: true }); return; }
+    fn();
+  }
+
   A.view('hardware', {
     enter: function () {
-      hwWarning();
+      afterOthers(hwWarning);
       if (state.status === undefined && A.counts.pump) state.status = A.counts.pump;
       render();
       statusTask.now();

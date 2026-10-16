@@ -78,6 +78,74 @@
     'sample.level': { en: 'Sample: {level}', th: 'ตัวอย่าง: {level}' },
     'sample.notCurrent': { en: 'This is sample data, not the current level. The server cannot be reached.', th: 'นี่คือข้อมูลตัวอย่าง ไม่ใช่ระดับปัจจุบัน เชื่อมต่อเซิร์ฟเวอร์ไม่ได้' },
 
+    // One-time guide to the app for users (js/guide.js)
+    'guide.step': { en: 'Step {n} of {total}', th: 'ขั้นที่ {n} จาก {total}' },
+    'guide.back': { en: 'Back', th: 'ย้อนกลับ' },
+    'guide.next': { en: 'Next', th: 'ถัดไป' },
+    'guide.finish': { en: 'Finish', th: 'เสร็จสิ้น' },
+    'guide.close': { en: 'Close the tutorial', th: 'ปิดคู่มือการใช้งาน' },
+    'guide.askTitle': { en: 'Close the tutorial?', th: 'ปิดคู่มือการใช้งานหรือไม่' },
+    'guide.askBody': { en: 'It will not be shown again.', th: 'คู่มือนี้จะไม่แสดงอีก' },
+    'guide.yes': { en: 'Yes, close it', th: 'ใช่ ปิดเลย' },
+    'guide.no': { en: 'No, keep going', th: 'ไม่ ดูต่อ' },
+    'guide.welcome.title': { en: 'Welcome to GunWaree', th: 'ยินดีต้อนรับสู่ GunWaree' },
+    'guide.welcome.body': {
+      en: 'This short guide shows what each part of the app does. Use Next to move on, or Back to go back.',
+      th: 'คู่มือสั้นๆ นี้จะพาดูว่าแต่ละส่วนของแอปทำอะไรได้ กด "ถัดไป" เพื่อไปต่อ หรือ "ย้อนกลับ" เพื่อดูขั้นก่อนหน้า'
+    },
+    'guide.menu.title': { en: 'The menu', th: 'เมนู' },
+    'guide.menu.body': {
+      en: 'Move between pages here: Home, Rule-based risk level, Rescue reports and Levels.',
+      th: 'ใช้เมนูนี้ไปยังหน้าต่างๆ ได้แก่ หน้าแรก ระดับความเสี่ยงตามกฎ แจ้งเหตุและติดตาม และระดับน้ำ'
+    },
+    'guide.risk.title': { en: 'Rule-based risk level', th: 'ระดับความเสี่ยงตามกฎ' },
+    'guide.risk.body': {
+      en: 'A level for the river at Ayutthaya (station 39) over the next 24 hours, from a simple rule. It is not an AI model and not an official warning. Its own page shows how the level is decided.',
+      th: 'ระดับของแม่น้ำที่อยุธยา (สถานี 39) ใน 24 ชั่วโมงข้างหน้า คำนวณจากกฎง่ายๆ ไม่ใช่โมเดล AI และไม่ใช่ประกาศเตือนภัยทางการ หน้าของระดับความเสี่ยงอธิบายว่าระดับนี้ตัดสินอย่างไร'
+    },
+    'guide.near.title': { en: 'Conditions near you', th: 'สถานการณ์ใกล้คุณ' },
+    'guide.near.body': {
+      en: 'See the road flooding gauges near you. Your location is used only in this browser, and you can choose a district instead.',
+      th: 'ดูจุดวัดน้ำท่วมถนนที่อยู่ใกล้คุณ ตำแหน่งของคุณใช้เฉพาะในเบราว์เซอร์นี้ และเลือกเขตแทนได้'
+    },
+    'guide.levels.title': { en: 'Water and dam levels', th: 'ระดับน้ำและเขื่อน' },
+    'guide.levels.body': {
+      en: 'Levels opens Water levels (rivers, canals and road flooding on a map) and Dam levels (storage in the main dams above Bangkok).',
+      th: 'เมนูระดับน้ำมีหน้าระดับน้ำ (แม่น้ำ คลอง และน้ำท่วมถนนบนแผนที่) และหน้าระดับเขื่อน (ปริมาณน้ำในเขื่อนหลักเหนือกรุงเทพฯ)'
+    },
+    'guide.reports.title': { en: 'Rescue reports', th: 'แจ้งเหตุและติดตาม' },
+    'guide.reports.body': {
+      en: 'Log in to send a rescue report and follow its status. Reports reach only this project’s admins, not rescue services. In an emergency call 191 or 1669.',
+      th: 'เข้าสู่ระบบเพื่อส่งการแจ้งเหตุและติดตามสถานะ การแจ้งเหตุถึงเฉพาะผู้ดูแลระบบของโครงการ ไม่ถูกส่งถึงหน่วยกู้ภัย หากเป็นเหตุฉุกเฉินโทร 191 หรือ 1669'
+    },
+    'guide.bell.title': { en: 'Alerts', th: 'การแจ้งเตือน' },
+    'guide.bell.body': {
+      en: 'The bell shows the alerts the GunWaree team has sent. You do not need an account to see them.',
+      th: 'กระดิ่งแสดงการแจ้งเตือนที่ทีม GunWaree ส่งแล้ว ดูได้โดยไม่ต้องมีบัญชี'
+    },
+    'guide.live.title': { en: 'Live refreshes', th: 'อัปเดตอัตโนมัติ' },
+    'guide.live.body': {
+      en: 'When this is on, the information refreshes by itself. If you turn it off, nothing updates until you turn it back on.',
+      th: 'เมื่อเปิดอยู่ ข้อมูลจะอัปเดตเอง ถ้าปิด ข้อมูลจะไม่อัปเดตจนกว่าคุณจะเปิดกลับ'
+    },
+    'guide.lang.title': { en: 'Thai or English', th: 'ภาษาไทยหรืออังกฤษ' },
+    'guide.lang.body': { en: 'Switch the language at any time.', th: 'เปลี่ยนภาษาได้ทุกเมื่อ' },
+    'guide.account.title': { en: 'Your account', th: 'บัญชีของคุณ' },
+    'guide.account.body': {
+      en: 'Log in or sign up here. You need an account to send rescue reports.',
+      th: 'เข้าสู่ระบบหรือสมัครสมาชิกที่นี่ ต้องมีบัญชีจึงจะส่งการแจ้งเหตุได้'
+    },
+    'guide.sos.title': { en: 'Emergency 1669', th: 'ฉุกเฉิน 1669' },
+    'guide.sos.body': {
+      en: 'Calls the emergency medical number 1669 from your phone.',
+      th: 'โทรหาหมายเลขการแพทย์ฉุกเฉิน 1669 จากโทรศัพท์ของคุณ'
+    },
+    'guide.done.title': { en: 'You are all set', th: 'พร้อมใช้งานแล้ว' },
+    'guide.done.body': {
+      en: 'To read about this demo again, use “About this demo” at the bottom of every page.',
+      th: 'อ่านเรื่องเว็บเดโมนี้อีกครั้งได้จาก “เกี่ยวกับเว็บเดโมนี้” ด้านล่างของทุกหน้า'
+    },
+
     // "Live refreshes" button in the top bar (js/shell.js) and the switch behind it (GW.live in js/api.js)
     'live.label': { en: 'Live refreshes', th: 'อัปเดตอัตโนมัติ' },
     'live.on': { en: 'On', th: 'เปิด' },

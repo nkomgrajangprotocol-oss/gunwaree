@@ -7,6 +7,42 @@
   var S = {
     // Admin menu and pages
     'ad.eyebrow': { en: 'Response Center', th: 'ศูนย์รับมือภัย' },
+
+    // One-time admin guide (js/guide.js); Back, Next, the Live refreshes, language and last steps share guide.* in js/lang.js
+    'gd.welcome.title': { en: 'Welcome to the Response Center', th: 'ยินดีต้อนรับสู่ศูนย์รับมือภัย' },
+    'gd.welcome.body': {
+      en: 'This short guide shows the admin tools. Use Next to move on, or Back to go back.',
+      th: 'คู่มือสั้นๆ นี้จะพาดูเครื่องมือของผู้ดูแลระบบ กด "ถัดไป" เพื่อไปต่อ หรือ "ย้อนกลับ" เพื่อดูขั้นก่อนหน้า'
+    },
+    'gd.menu.title': { en: 'The admin menu', th: 'เมนูผู้ดูแลระบบ' },
+    'gd.menu.body': {
+      en: 'Dashboard, Alert queue, Rescue reports and Hardware control. Numbers on the menu show alerts waiting to be sent and new rescue reports; a dot shows the pump is running.',
+      th: 'ภาพรวมสถานการณ์ คิวแจ้งเตือน รายงานความช่วยเหลือ และควบคุมระบบระบายน้ำ ตัวเลขบนเมนูบอกจำนวนแจ้งเตือนที่รอส่งและรายงานความช่วยเหลือใหม่ ส่วนจุดบอกว่าปั๊มกำลังทำงาน'
+    },
+    'gd.dashboard.title': { en: 'Dashboard', th: 'ภาพรวมสถานการณ์' },
+    'gd.dashboard.body': {
+      en: 'The water level at Ayutthaya with its last 24 hours, rainfall, dam storage, the rule-based risk level, and districts with road flooding on a map.',
+      th: 'ระดับน้ำที่อยุธยาพร้อมกราฟ 24 ชั่วโมงที่ผ่านมา ปริมาณฝน ปริมาณน้ำในเขื่อน ระดับความเสี่ยงตามกฎ และเขตที่มีน้ำท่วมถนนบนแผนที่'
+    },
+    'gd.alerts.title': { en: 'Alert queue', th: 'คิวแจ้งเตือน' },
+    'gd.alerts.body': {
+      en: 'Write a new alert, check it, then send it to everyone. An alert is only sent after you confirm.',
+      th: 'เขียนแจ้งเตือนใหม่ ตรวจทาน แล้วส่งถึงทุกคน แจ้งเตือนจะถูกส่งหลังจากคุณยืนยันเท่านั้น'
+    },
+    'gd.reports.title': { en: 'Rescue reports', th: 'รายงานความช่วยเหลือ' },
+    'gd.reports.body': {
+      en: 'Every report sent by users. Search and filter them, and change a report\u2019s status: Received, In progress or Completed. This page does not refresh by itself.',
+      th: 'รายงานทั้งหมดที่ผู้ใช้ส่งมา ค้นหาและกรองได้ และเปลี่ยนสถานะของรายงานเป็น รับเรื่องแล้ว กำลังดำเนินการ หรือ เสร็จสิ้น หน้านี้ไม่รีเฟรชเอง'
+    },
+    'gd.hardware.title': { en: 'Hardware control', th: 'ควบคุมระบบระบายน้ำ' },
+    'gd.hardware.body': {
+      en: 'Start or stop the pump on the ESP32 test rig and see its water reading. Starting the pump asks you to confirm.',
+      th: 'สั่งเปิดหรือปิดปั๊มของชุดทดลอง ESP32 และดูค่าระดับน้ำที่วัดได้ การสั่งเปิดปั๊มจะถามยืนยันก่อน'
+    },
+    'gd.bell.title': { en: 'Sent alerts', th: 'แจ้งเตือนที่ส่งแล้ว' },
+    'gd.bell.body': { en: 'The bell shows the alerts that have been sent, as users see them.', th: 'กระดิ่งแสดงแจ้งเตือนที่ส่งแล้ว แบบเดียวกับที่ผู้ใช้เห็น' },
+    'gd.account.title': { en: 'Your admin account', th: 'บัญชีผู้ดูแลระบบ' },
+    'gd.account.body': { en: 'Log out here when you are done.', th: 'ออกจากระบบได้ที่นี่เมื่อใช้งานเสร็จ' },
     'ad.nav.overview': { en: 'Dashboard', th: 'ภาพรวมสถานการณ์' },
     'ad.nav.alerts': { en: 'Alert queue', th: 'คิวแจ้งเตือน' },
     'ad.nav.reports': { en: 'Rescue reports', th: 'รายงานความช่วยเหลือ' },

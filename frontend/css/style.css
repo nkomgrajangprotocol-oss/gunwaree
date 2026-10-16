@@ -1521,3 +1521,6 @@ button.text-link [lang="th"] { display: inline; margin-left: var(--s-1); font-we
   pointer-events: none;
   animation: arrive 800ms var(--ease) 60ms both;
 }
+
+/* Logo: a soft shadow under the glass drop, so it sits on the page instead of floating flat */
+.logo svg, .sidebar__brand svg, .topbar__brand svg { filter: drop-shadow(0 1.5px 1.5px rgba(4, 25, 31, 0.45)); overflow: visible; }

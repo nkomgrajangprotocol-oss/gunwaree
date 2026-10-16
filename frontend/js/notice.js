@@ -75,12 +75,17 @@
 
   // After the page change has settled, so it never interrupts the transition.
   // If the browser never reports that, show it anyway after a moment.
-  // The "This is a demo website" box (js/demo.js) goes first: wait until it is closed.
+  // The "This is a demo website" box (js/demo.js) and the guide (js/guide.js) go first: wait until they are closed.
   var shown = false;
   function show() {
     if (shown || !dialog.isConnected) return;
     if (GW.demo && GW.demo.busy()) {
       document.addEventListener('gw:demo-closed', show, { once: true });
+      return;
+    }
+    // Then the one-time guide (js/guide.js), if it is about to run or running
+    if (GW.guide && GW.guide.busy()) {
+      document.addEventListener('gw:guide-closed', show, { once: true });
       return;
     }
     shown = true;
