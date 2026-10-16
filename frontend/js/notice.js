@@ -75,9 +75,14 @@
 
   // After the page change has settled, so it never interrupts the transition.
   // If the browser never reports that, show it anyway after a moment.
+  // The "This is a demo website" box (js/demo.js) goes first: wait until it is closed.
   var shown = false;
   function show() {
     if (shown || !dialog.isConnected) return;
+    if (GW.demo && GW.demo.busy()) {
+      document.addEventListener('gw:demo-closed', show, { once: true });
+      return;
+    }
     shown = true;
     try { dialog.showModal(); } catch (e) { dialog.setAttribute('open', ''); }
     ok.focus();

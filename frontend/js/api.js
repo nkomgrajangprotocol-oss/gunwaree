@@ -181,6 +181,38 @@
     });
   };
 
+  /* ---------- Live refreshes: one switch for every automatic refresh ----------
+     On by default. Off (the "Live refreshes" button in the top bar, after a warning) stops every timed refresh and
+     retry on every page until it is turned back on; pages still load once when opened, and still update after
+     something the person does. Remembered on this device: localStorage gw_live = 'off'. Turning it back on fires
+     'gw:live' so each page fetches its data again straight away. */
+
+  var LIVE_KEY = 'gw_live';
+  var liveOn = true;
+  try { liveOn = localStorage.getItem(LIVE_KEY) !== 'off'; } catch (e) { liveOn = true; }
+
+  GW.live = {
+    on: function () { return liveOn; },
+    set: function (on) {
+      on = !!on;
+      if (on === liveOn) return;
+      liveOn = on;
+      try {
+        if (on) localStorage.removeItem(LIVE_KEY); else localStorage.setItem(LIVE_KEY, 'off');
+      } catch (e) { /* storage blocked: this page still follows the choice */ }
+      document.dispatchEvent(new CustomEvent('gw:live', { detail: { on: on } }));
+    }
+  };
+
+  // The same switch in another tab
+  window.addEventListener('storage', function (e) {
+    if (e.key !== LIVE_KEY) return;
+    var on = e.newValue !== 'off';
+    if (on === liveOn) return;
+    liveOn = on;
+    document.dispatchEvent(new CustomEvent('gw:live', { detail: { on: on } }));
+  });
+
   /* ---------- Rule-based risk level: GET /risk at most once every 5 minutes across pages ----------
      Each call stores a prediction row on the server, so the latest answer (or failure) and its time are kept in
      sessionStorage and reused for 5 minutes, also after moving to another page. Only the /risk answer is kept.

@@ -195,7 +195,8 @@
   }
   setInterval(function () {
     if (!started) return;
-    tasks.forEach(function (t) { run(t, false); });
+    // Live refreshes off: nothing runs on its own (the clocks still tick); a task can still be run on purpose (.now())
+    if (GW.live.on()) tasks.forEach(function (t) { run(t, false); });
     document.dispatchEvent(new CustomEvent('adm:tick'));
   }, 1000);
 
@@ -259,6 +260,7 @@
     if (view && view.render) view.render();
   });
   document.addEventListener('gw:session', function () { if (!isAdmin()) leave(); });
+  document.addEventListener('gw:live', function (e) { if (e.detail.on && started) tasks.forEach(function (t) { run(t, true); }); });
 
   GW.admin = {
     $: $, $$: $$, h: h, text: text, num: num, time: time, clock: clock, clockSec: clockSec, date: date, ago: ago,

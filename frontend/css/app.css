@@ -2891,3 +2891,103 @@ fieldset.field legend { padding: 0; margin-bottom: var(--s-1); }
   line-height: 1.7;
 }
 .sample-tag[hidden] { display: none; }
+
+/* ---------- "This is a demo website" box (js/demo.js) ----------
+   The missing-data note's dialog, wider type for projectors. The text scrolls inside the box and the button
+   stays in view; on phones the box takes about half the screen. */
+
+.notice--demo { width: min(42rem, calc(100vw - 2rem)); max-height: min(46rem, calc(100svh - 2rem)); }
+.notice--demo[open] { display: flex; flex-direction: column; }
+.notice--demo .notice__panel { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--s-6) var(--s-6) var(--s-4); }
+.demo__lead { font-size: var(--fs-18); font-weight: 600; line-height: 1.55; color: var(--c-ink-700); }
+.demo__list { display: grid; gap: var(--s-3); margin: 0; padding-left: 1.5em; list-style: decimal; font-size: var(--fs-16); line-height: 1.65; color: var(--c-text); }
+.demo__list li { padding-left: var(--s-1); }
+.demo__list a { color: var(--c-teal-600); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.notice__foot.demo__foot { flex-shrink: 0; justify-content: flex-end; margin: 0; padding: var(--s-3) var(--s-6) var(--s-6); border-top: 1px solid var(--card-line); }
+.app-footer .demo-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--on-sky);
+  font: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(244, 248, 250, 0.4);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.app-footer .demo-link:hover { text-decoration-color: currentColor; }
+.app-footer .demo-link:focus-visible { outline-color: var(--c-aqua-200); }
+@media (max-width: 640px) {
+  .notice--demo { max-height: 56svh; }
+  .notice--demo .notice__panel { padding: var(--s-4) var(--s-4) var(--s-3); }
+  .notice__foot.demo__foot { padding: var(--s-3) var(--s-4) var(--s-4); }
+  .notice__foot.demo__foot .notice__ok { width: 100%; }
+}
+
+/* ---------- "Live refreshes" button in the top bar, and its warning (js/shell.js) ---------- */
+
+.live-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 2.5rem;
+  padding: 0 var(--s-3);
+  border: 1px solid rgba(234, 246, 248, 0.5);
+  border-radius: var(--r-md);
+  background: rgba(10, 48, 58, 0.55);
+  color: var(--on-sky);
+  font: inherit;
+  font-size: var(--fs-14);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.live-btn:hover { background: var(--c-ink-900); }
+.live-btn:focus-visible { outline-color: var(--c-aqua-200); }
+.live-btn__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #5FD39A;
+  box-shadow: 0 0 0 3px rgba(95, 211, 154, 0.25);
+}
+.live-btn__state {
+  padding: 0 6px;
+  border-radius: var(--r-sm);
+  background: rgba(95, 211, 154, 0.22);
+  color: #D9FBEA;
+  font-size: var(--fs-12);
+  line-height: 1.6;
+}
+/* Off: amber, so it is obvious on a projector that the screen is not updating */
+.live-btn.is-off { border-color: #F2B45A; background: rgba(70, 40, 6, 0.6); }
+.live-btn.is-off .live-btn__dot { background: #F2B45A; box-shadow: 0 0 0 3px rgba(242, 180, 90, 0.3); }
+.live-btn.is-off .live-btn__state { background: rgba(242, 180, 90, 0.25); color: #FFE7C2; }
+@media (prefers-reduced-motion: no-preference) and (min-width: 641px) {
+  .live-btn:not(.is-off) .live-btn__dot { animation: live-beat 2.4s ease-in-out infinite; }
+}
+@keyframes live-beat {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(95, 211, 154, 0.25); }
+  50% { box-shadow: 0 0 0 6px rgba(95, 211, 154, 0.05); }
+}
+/* Phones: the dot and On/Off only; the full name stays for screen readers and the tooltip */
+@media (max-width: 640px) {
+  .live-btn { padding: 0 var(--s-2); }
+  .live-btn__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+
+.live-warn__body { line-height: 1.65; color: var(--c-text); font-size: var(--fs-16); }
+.live-warn__foot { justify-content: flex-end; }
+.live-warn__keep {
+  min-height: 3rem;
+  padding: 0 var(--s-4);
+  border: 1px solid var(--card-line);
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--c-ink-700);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.live-warn__keep:hover { background: rgba(10, 48, 58, 0.06); }

@@ -735,12 +735,71 @@
     go();
   }
 
+  /* Enter sound, made in the browser with Web Audio (no file, no request): a water drop, then a soft rush of
+     rain that rises with the warp. Quiet, about 1.6 s, and only after the click (browsers allow sound then).
+     Reduced motion: the drop only. */
+  function enterSound(withRush) {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    try {
+      var ac = new AC();
+      var t0 = ac.currentTime + 0.01;
+      var master = ac.createGain();
+      master.gain.value = 0.5;
+      master.connect(ac.destination);
+
+      // The drop: a sine that bends up fast and fades, twice (the second smaller, like a ripple)
+      [[0, 1, 360, 980], [0.11, 0.45, 520, 1250]].forEach(function (d) {
+        var o = ac.createOscillator();
+        var g = ac.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(d[2], t0 + d[0]);
+        o.frequency.exponentialRampToValueAtTime(d[3], t0 + d[0] + 0.09);
+        g.gain.setValueAtTime(0.0001, t0 + d[0]);
+        g.gain.exponentialRampToValueAtTime(0.35 * d[1], t0 + d[0] + 0.012);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + d[0] + 0.22);
+        o.connect(g);
+        g.connect(master);
+        o.start(t0 + d[0]);
+        o.stop(t0 + d[0] + 0.25);
+      });
+
+      if (withRush) {
+        // The rush: filtered noise whose band rises and swells with the warp, then fades as the page changes
+        var len = Math.floor(ac.sampleRate * 1.7);
+        var buf = ac.createBuffer(1, len, ac.sampleRate);
+        var ch = buf.getChannelData(0);
+        for (var i = 0; i < len; i++) ch[i] = Math.random() * 2 - 1;
+        var noise = ac.createBufferSource();
+        noise.buffer = buf;
+        var band = ac.createBiquadFilter();
+        band.type = 'bandpass';
+        band.Q.value = 0.8;
+        band.frequency.setValueAtTime(400, t0 + 0.05);
+        band.frequency.exponentialRampToValueAtTime(3200, t0 + 1.55);
+        var ng = ac.createGain();
+        ng.gain.setValueAtTime(0.0001, t0 + 0.05);
+        ng.gain.exponentialRampToValueAtTime(0.16, t0 + 1.2);
+        ng.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.68);
+        noise.connect(band);
+        band.connect(ng);
+        ng.connect(master);
+        noise.start(t0 + 0.05);
+        noise.stop(t0 + 1.7);
+      }
+      setTimeout(function () { try { ac.close(); } catch (e) { /* already closed */ } }, 2000);
+    } catch (err) {
+      // No sound is fine: the page works the same
+    }
+  }
+
   enter.addEventListener('click', function (e) {
     if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
     if (warp.active || navigating) return;
     try { sessionStorage.setItem('gw_warp', '1'); } catch (err) { /* storage blocked */ }
     root.classList.add('is-warping');
+    enterSound(!reduceMotion.matches && !!comp);
 
     if (reduceMotion.matches || !comp) {
       navTimer = setTimeout(go, reduceMotion.matches ? 120 : 420);

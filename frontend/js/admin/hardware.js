@@ -290,8 +290,57 @@
     }).then(function () { renderStats(); renderDevices(); renderHealth(); });
   }, 'hardware');
 
+  /* ---------- The "shown as infographics" warning ----------
+     Opens the 1st time an admin opens this page on this device, then on the 3rd, 6th, 9th visit and so on
+     (every third). Visits are counted in localStorage gw_hw_visits. Closes with its button or Esc. */
+
+  var VISITS_KEY = 'gw_hw_visits';
+  var counted = false;   // one visit per page load, however often the view is entered
+
+  function hwWarning() {
+    if (counted) return;
+    counted = true;
+    var n = 0;
+    try { n = (parseInt(localStorage.getItem(VISITS_KEY), 10) || 0) + 1; localStorage.setItem(VISITS_KEY, String(n)); } catch (e) { n = 1; }
+    if (!(n === 1 || n % 3 === 0)) return;
+    var d = h('dialog', 'notice notice--hw');
+    if (typeof d.showModal !== 'function') return;
+    d.setAttribute('aria-labelledby', 'hw-warn-title');
+    d.setAttribute('aria-describedby', 'hw-warn-body');
+    var panel = h('div', 'notice__panel');
+    panel.insertAdjacentHTML('beforeend', '<span class="notice__icon notice__icon--warn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5 21.5 20h-19Z"/><path d="M12 10v4.5M12 17.2v.3" stroke-linecap="round"/></svg></span>');
+    var title = h('h2', 'notice__title');
+    title.id = 'hw-warn-title';
+    var body = h('p', 'hw-warn__body');
+    body.id = 'hw-warn-body';
+    var foot = h('div', 'notice__foot hw-warn__foot');
+    var ok = h('button', 'btn notice__ok');
+    ok.type = 'button';
+    foot.appendChild(ok);
+    panel.appendChild(title);
+    panel.appendChild(body);
+    panel.appendChild(foot);
+    d.appendChild(panel);
+    document.body.appendChild(d);
+    function fill() {
+      title.textContent = L.t('ad.hw.warnTitle');
+      body.textContent = L.t('ad.hw.warnBody');
+      ok.textContent = L.t('ad.hw.warnOk');
+    }
+    fill();
+    document.addEventListener('gw:lang', fill);
+    ok.addEventListener('click', function () { d.close(); });
+    d.addEventListener('close', function () {
+      document.removeEventListener('gw:lang', fill);
+      d.remove();
+    });
+    d.showModal();
+    ok.focus();
+  }
+
   A.view('hardware', {
     enter: function () {
+      hwWarning();
       if (state.status === undefined && A.counts.pump) state.status = A.counts.pump;
       render();
       statusTask.now();

@@ -158,6 +158,64 @@
   });
   if (sky) allPuffs.push(sky.querySelector('.sky__clouds'));
 
+  /* ---------- 3D clouds on the white cards ----------
+     One cloud in a bottom corner of each white card (two on wide ones), behind the content. Only cards on
+     screen animate; phones, slow machines and reduced motion get still clouds. Maps and the small risk card
+     on the hero photo are left alone. */
+
+  // Spheres of one cloud: [left, top, size] as parts of its width, and depth in px
+  var PUFFS = [[0.02, 0.36, 0.34, 6], [0.18, 0.14, 0.44, 26], [0.42, 0.0, 0.48, 0], [0.64, 0.2, 0.36, 18], [0.78, 0.38, 0.26, 34]];
+  var cloudObserver = null;
+  if (!lite && !reduce.matches && window.IntersectionObserver) {
+    cloudObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { en.target.classList.toggle('is-live', en.isIntersecting); });
+    });
+  }
+
+  function makeCloud(side, w) {
+    var c = el('cl cl--' + side, {
+      '--w': Math.round(w) + 'px',
+      '--t': rand(24, 36).toFixed(1) + 's',
+      '--delay': -rand(0, 20).toFixed(1) + 's'
+    });
+    PUFFS.forEach(function (p) {
+      c.appendChild(el('cl__puff', {
+        '--x': Math.round(p[0] * w) + 'px',
+        '--y': Math.round(p[1] * w) + 'px',
+        '--s': Math.round(p[2] * w) + 'px',
+        '--z': p[3] + 'px'
+      }));
+    });
+    c.appendChild(el('cl__base'));
+    return c;
+  }
+
+  function isWhite(e) {
+    var m = /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?/.exec(getComputedStyle(e).backgroundColor);
+    return !!m && +m[1] > 225 && +m[2] > 225 && +m[3] > 225 && (m[4] === undefined || +m[4] > 0.5);
+  }
+
+  function cardClouds() {
+    document.querySelectorAll('.content .card, .content .box').forEach(function (card) {
+      if (card.querySelector(':scope > .cl-layer') || (card.parentElement && card.parentElement.closest('.cl-host'))) return;
+      if (card.matches('.map-card, .risk-card, dialog *') || !card.offsetParent) return;
+      var r = card.getBoundingClientRect();
+      if (r.width < 240 || r.height < 120 || !isWhite(card)) return;
+      if (getComputedStyle(card).position === 'static') card.style.position = 'relative';
+      card.classList.add('cl-host');
+      var box = layer('cl-layer' + (cloudObserver ? '' : ' cl-static'));
+      var w = Math.max(170, Math.min(260, r.width * 0.34));
+      box.appendChild(makeCloud('br', w));
+      if (r.width > 700) box.appendChild(makeCloud('bl', w * 0.75));
+      card.insertBefore(box, card.firstChild);
+      if (cloudObserver) cloudObserver.observe(box);
+    });
+  }
+  // Cards fill in as data arrives (some start hidden), so look again a little later
+  cardClouds();
+  setTimeout(cardClouds, 2500);
+  setTimeout(cardClouds, 7000);
+
   // Clouds cross the whole box they live in, whatever its width
   function spans() {
     allPuffs.forEach(function (host) {

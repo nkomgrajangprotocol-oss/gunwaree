@@ -509,6 +509,7 @@
     if (!onSample || retryTimer) return;
     retryTimer = setTimeout(function () {
       retryTimer = 0;
+      if (!GW.live.on()) return;   // live refreshes off: wait until they are turned back on
       loaders.forEach(function (fn) { if (fn !== loadRisk) fn(); });
     }, 15000);
   }
@@ -529,7 +530,7 @@
   }
 
   function every(ms, fn) {
-    setInterval(function () { if (!document.hidden) fn(); }, ms);
+    setInterval(function () { if (!document.hidden && GW.live.on()) fn(); }, ms);
   }
 
   renderAll();
@@ -549,5 +550,7 @@
   every(30 * 60 * 1000, loadDams);
 
   document.addEventListener('gw:lang', renderAll);
+  // Live refreshes turned back on: fetch everything now (/risk still at most once every 5 minutes)
+  document.addEventListener('gw:live', function (e) { if (e.detail.on) loaders.forEach(function (fn) { fn(); }); });
   document.addEventListener('gw:alerts', syncAlerts);
 })(window.GW = window.GW || {});

@@ -1,6 +1,6 @@
 /* Admin: Rescue reports (admin-reports.html).
 
-   GET   /admin/incidents        every 30 seconds  every report, newest first, with the reporter's username
+   GET   /admin/incidents        on opening, after a change  every report, newest first, with the reporter's username
    PATCH /admin/incidents/{id}   Manage            status new (Received) / in_progress (In progress) / resolved (Completed)
 
    Report numbers show as GW-0001, the same as the member sees. Reports have no district field, so the
@@ -376,7 +376,8 @@
     });
   }
 
-  var task = A.every(30 * 1000, load, 'reports');
+  // No timed refresh on this page: the list loads when the page opens and after a status change
+  var task = A.every(Infinity, load, 'reports');
 
   A.view('reports', {
     enter: function () {

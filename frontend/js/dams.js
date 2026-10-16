@@ -488,7 +488,7 @@
       renderStatus();
       // Showing the offline snapshot: try the backend again soon
       if (state.mode === 'sample' && !retryTimer) {
-        retryTimer = setTimeout(function () { retryTimer = 0; load(); }, 15000);
+        retryTimer = setTimeout(function () { retryTimer = 0; if (GW.live.on()) load(); }, 15000);
       }
     });
   }
@@ -505,5 +505,6 @@
   });
 
   load();
-  setInterval(function () { if (!document.hidden) load(); }, REFRESH_MS);
+  setInterval(function () { if (!document.hidden && GW.live.on()) load(); }, REFRESH_MS);
+  document.addEventListener('gw:live', function (e) { if (e.detail.on) load(); });
 })(window.GW = window.GW || {});

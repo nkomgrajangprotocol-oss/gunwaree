@@ -510,7 +510,69 @@
   renderAccount();
   renderBell();
   loadAlerts();
-  setInterval(function () { if (!document.hidden) loadAlerts(); }, 30 * 1000);
+  setInterval(function () { if (!document.hidden && GW.live.on()) loadAlerts(); }, 30 * 1000);
+  document.addEventListener('gw:live', function (e) { if (e.detail.on) loadAlerts(); });
+
+  /* ---------- "Live refreshes" button in the top bar ----------
+     On by default (GW.live in js/api.js). Turning it off always asks first, in a box that says the information may
+     then go out of date and will not update until it is turned back on. Turning it on needs no warning: every
+     page fetches its data again straight away. */
+
+  var liveBtn = h('button', 'live-btn');
+  liveBtn.type = 'button';
+  liveBtn.innerHTML = '<span class="live-btn__dot" aria-hidden="true"></span><span class="live-btn__label"></span><span class="live-btn__state"></span>';
+  var actions = document.querySelector('.topbar__actions');
+  if (actions) actions.insertBefore(liveBtn, actions.firstChild);
+
+  var liveWarn = null;
+  function buildWarn() {
+    var d = h('dialog', 'notice notice--live');
+    d.setAttribute('aria-labelledby', 'live-warn-title');
+    d.setAttribute('aria-describedby', 'live-warn-body');
+    d.innerHTML = '<div class="notice__panel"><h2 class="notice__title" id="live-warn-title"></h2>' +
+      '<p class="live-warn__body" id="live-warn-body"></p>' +
+      '<div class="notice__foot live-warn__foot"><button class="live-warn__keep" type="button" data-live-keep></button>' +
+      '<button class="btn notice__ok" type="button" data-live-off></button></div></div>';
+    document.body.appendChild(d);
+    d.querySelector('[data-live-keep]').addEventListener('click', function () { d.close(); });
+    d.querySelector('[data-live-off]').addEventListener('click', function () {
+      GW.live.set(false);
+      d.close();
+    });
+    d.addEventListener('close', function () { liveBtn.focus(); });
+    return d;
+  }
+  function fillWarn() {
+    if (!liveWarn) return;
+    liveWarn.querySelector('.notice__title').textContent = L.t('live.warnTitle');
+    liveWarn.querySelector('.live-warn__body').textContent = L.t('live.warnBody');
+    liveWarn.querySelector('[data-live-keep]').textContent = L.t('live.keep');
+    liveWarn.querySelector('[data-live-off]').textContent = L.t('live.turnOff');
+  }
+
+  function renderLive() {
+    var on = GW.live.on();
+    liveBtn.classList.toggle('is-off', !on);
+    liveBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    liveBtn.querySelector('.live-btn__label').textContent = L.t('live.label');
+    liveBtn.querySelector('.live-btn__state').textContent = L.t(on ? 'live.on' : 'live.off');
+    liveBtn.title = L.t(on ? 'live.tipOn' : 'live.tipOff');
+  }
+  renderLive();
+
+  liveBtn.addEventListener('click', function () {
+    if (!GW.live.on()) { GW.live.set(true); return; }
+    if (!liveWarn) liveWarn = buildWarn();
+    fillWarn();
+    if (typeof liveWarn.showModal === 'function') {
+      liveWarn.showModal();
+      liveWarn.querySelector('[data-live-keep]').focus();
+    } else if (window.confirm(L.t('live.warnTitle') + '\n\n' + L.t('live.warnBody'))) {
+      GW.live.set(false);
+    }
+  });
+  document.addEventListener('gw:live', renderLive);
+  document.addEventListener('gw:lang', function () { renderLive(); fillWarn(); });
 
   // Language change: the switch letters turn over and the page content turns with them
   document.addEventListener('gw:lang', function () {

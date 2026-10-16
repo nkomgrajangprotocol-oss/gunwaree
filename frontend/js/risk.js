@@ -172,6 +172,7 @@
     var el = $('[data-next]');
     if (!el) return;
     if (!last.risk || busy.risk) { el.textContent = L.t('rp.loading'); return; }
+    if (!GW.live.on()) { el.textContent = L.t('live.paused'); return; }
     var left = Math.max(0, last.risk + RISK_MS - Date.now());
     var m = Math.floor(left / 60000);
     var s = Math.floor((left % 60000) / 1000);
@@ -759,7 +760,7 @@
   }
   setInterval(function () {
     tick();
-    if (document.hidden) return;
+    if (document.hidden || !GW.live.on()) return;
     if (due('risk', RISK_MS)) loadRisk();
     if (due('river', RIVER_MS) && !pendingRiver) loadRiver();
   }, 1000);
@@ -770,6 +771,13 @@
     renderLog();
   });
   document.addEventListener('gw:session', loadLog);
+  // Live refreshes turned back on: the river now, /risk if its 5 minutes are up
+  document.addEventListener('gw:live', function (e) {
+    tick();
+    if (!e.detail.on) return;
+    loadRiver();
+    if (due('risk', RISK_MS)) loadRisk();
+  });
 
   renderTrack();
   watchTrack();

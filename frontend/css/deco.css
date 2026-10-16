@@ -258,3 +258,82 @@
   .drop--run, .bubble, .sky__flash, .ripple { display: none; }
   .puff { transform: translate3d(var(--still, 20%), 0, 0); }
 }
+
+/* ---------- 3D clouds on the white cards ----------
+   Each cloud is a few shaded spheres on a flat base, set at different depths inside a perspective box, so it
+   turns a little like a real object while it drifts. It sits behind the card's content (z-index -1 inside the
+   card, which js/deco.js isolates), in a corner, and never over a label's colour: clouds are near-white.
+   Only clouds on screen move (js/deco.js adds .is-live); phones and slow machines get still clouds. */
+
+.cl-host { isolation: isolate; }
+.cl-layer {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  perspective: 700px;
+  /* A patch of pale sky in the lower corners, so the white clouds stand out on the white card */
+  background:
+    radial-gradient(70% 80% at 100% 100%, rgba(143, 196, 230, 0.32), rgba(143, 196, 230, 0) 70%),
+    radial-gradient(45% 60% at 0% 100%, rgba(143, 196, 230, 0.18), rgba(143, 196, 230, 0) 70%);
+}
+.cl {
+  position: absolute;
+  width: var(--w, 190px);
+  height: calc(var(--w, 190px) * 0.52);
+  transform-style: preserve-3d;
+  transform: rotateX(8deg) rotateY(-10deg);
+  opacity: var(--o, 0.95);
+  animation: cl-drift var(--t, 28s) ease-in-out var(--delay, 0s) infinite alternate;
+  animation-play-state: paused;
+}
+.cl-layer.is-live .cl { animation-play-state: running; }
+.cl--br { right: var(--edge, -22px); bottom: var(--sink, -22px); }
+.cl--bl { left: var(--edge, -36px); bottom: var(--sink, -34px); --dx: 34px; }
+@keyframes cl-drift {
+  0% { transform: translate3d(0, 0, 0) rotateX(8deg) rotateY(-12deg); }
+  50% { transform: translate3d(calc(var(--dx, -34px) * 0.5), -5px, 0) rotateX(4deg) rotateY(0deg); }
+  100% { transform: translate3d(var(--dx, -34px), 0, 0) rotateX(7deg) rotateY(12deg); }
+}
+
+/* A sphere: lit from the top left, shaded blue-grey underneath, soft at the rim */
+.cl__puff {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--s);
+  height: var(--s);
+  border-radius: 50%;
+  transform: translateZ(var(--z, 0px));
+  background: radial-gradient(circle at 36% 30%, #FFFFFF 0 18%, #F4F8FB 38%, #DAE7EF 60%, #BCD1DF 82%, rgba(188, 209, 223, 0) 100%);
+  box-shadow: inset -6px -8px 14px rgba(120, 160, 186, 0.18);
+}
+/* The flat underside every cloud sits on, and its faint shadow on the card */
+.cl__base {
+  position: absolute;
+  left: 8%;
+  right: 6%;
+  bottom: 10%;
+  height: 30%;
+  border-radius: 999px;
+  transform: translateZ(14px);
+  background: linear-gradient(to bottom, #FFFFFF 0%, #ECF3F7 50%, #C8DAE6 100%);
+}
+.cl::after {
+  content: "";
+  position: absolute;
+  left: 10%;
+  right: 6%;
+  bottom: -4%;
+  height: 16%;
+  border-radius: 50%;
+  transform: translateZ(-20px);
+  background: radial-gradient(closest-side, rgba(10, 48, 58, 0.14), rgba(10, 48, 58, 0));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cl { animation: none !important; }
+}
+.cl-layer.cl-static .cl { animation: none; }

@@ -78,6 +78,50 @@
     'sample.level': { en: 'Sample: {level}', th: 'ตัวอย่าง: {level}' },
     'sample.notCurrent': { en: 'This is sample data, not the current level. The server cannot be reached.', th: 'นี่คือข้อมูลตัวอย่าง ไม่ใช่ระดับปัจจุบัน เชื่อมต่อเซิร์ฟเวอร์ไม่ได้' },
 
+    // "Live refreshes" button in the top bar (js/shell.js) and the switch behind it (GW.live in js/api.js)
+    'live.label': { en: 'Live refreshes', th: 'อัปเดตอัตโนมัติ' },
+    'live.on': { en: 'On', th: 'เปิด' },
+    'live.off': { en: 'Off', th: 'ปิด' },
+    'live.tipOn': { en: 'The information refreshes by itself. Click to turn this off.', th: 'ข้อมูลอัปเดตเองอัตโนมัติ คลิกเพื่อปิด' },
+    'live.tipOff': { en: 'Live refreshes are off, so the information is not updating. Click to turn them back on.', th: 'ปิดการอัปเดตอัตโนมัติอยู่ ข้อมูลจึงไม่อัปเดต คลิกเพื่อเปิดกลับ' },
+    'live.warnTitle': { en: 'Turn off live refreshes?', th: 'ปิดการอัปเดตอัตโนมัติหรือไม่' },
+    'live.warnBody': {
+      en: 'If you turn off live refreshes, the information on screen might not be up to date. It will not refresh or update again until you turn live refreshes back on.',
+      th: 'ถ้าปิดการอัปเดตอัตโนมัติ ข้อมูลบนหน้าจออาจไม่เป็นปัจจุบัน และจะไม่รีเฟรชหรืออัปเดตอีกเลยจนกว่าคุณจะเปิดการอัปเดตอัตโนมัติกลับ'
+    },
+    'live.keep': { en: 'Keep them on', th: 'เปิดไว้ต่อ' },
+    'live.turnOff': { en: 'Turn off', th: 'ปิดการอัปเดต' },
+    'live.paused': { en: 'Paused (live refreshes are off)', th: 'หยุดอยู่ (ปิดการอัปเดตอัตโนมัติ)' },
+
+    // "This is a demo website" box (js/demo.js), wording from the Captain
+    'demo.title': { en: 'This is a demo website', th: 'นี่คือเว็บเดโม' },
+    'demo.lead': { en: 'GunWaree is a prototype built for a hackathon. It is not an official warning.', th: 'GunWaree เป็นระบบต้นแบบที่สร้างสำหรับงานแฮกกาธอน ไม่ใช่ประกาศเตือนภัยทางการ' },
+    'demo.p1': {
+      en: 'Water, rain and road data come from public sources (POPNIX Flood, ThaiWater/HII, Open-Meteo, Royal Irrigation Department), and readings show their time. River levels older than 3 hours are marked “not updating”, gauges on the Water levels page that have not reported for over 3 hours show “No recent report”, and the risk level is not computed from old data.',
+      th: 'ข้อมูลน้ำ ฝน และถนนมาจากแหล่งสาธารณะ (POPNIX Flood, ThaiWater/สสน., Open-Meteo, กรมชลประทาน) และค่าที่แสดงมีเวลากำกับ ระดับน้ำแม่น้ำที่เก่ากว่า 3 ชั่วโมงจะขึ้นป้าย “ไม่อัปเดต” สถานีในหน้าระดับน้ำที่ไม่ได้รายงานเกิน 3 ชั่วโมงจะแสดงว่า “ไม่มีรายงานล่าสุด” และระบบจะไม่ประเมินความเสี่ยงจากข้อมูลเก่า'
+    },
+    'demo.p2': {
+      en: 'The risk level comes from a simple rule at the Phra Nakhon Si Ayutthaya station. It is not an AI model and not a probability.',
+      th: 'ระดับความเสี่ยงคำนวณจากกฎง่ายๆ ที่สถานีพระนครศรีอยุธยา ไม่ใช่โมเดล AI และไม่ใช่ความน่าจะเป็น'
+    },
+    'demo.p3': {
+      en: 'The ESP32 test rig is an experimental device measuring water in a container, not a real gauge.',
+      th: 'ชุดทดลอง ESP32 เป็นอุปกรณ์ทดลองที่วัดน้ำในภาชนะ ไม่ใช่สถานีวัดจริง'
+    },
+    'demo.p4': {
+      en: 'Reports sent here reach only this project’s admins, not rescue services. In a real emergency call 191 (general emergency) or 1784 (Department of Disaster Prevention and Mitigation). For a medical emergency call 1669.',
+      th: 'การแจ้งเหตุในเว็บนี้ถึงเฉพาะผู้ดูแลระบบของโครงการ ไม่ถูกส่งถึงหน่วยกู้ภัย หากเป็นเหตุฉุกเฉินจริง โทร 191 (เหตุฉุกเฉินทั่วไป) หรือ 1784 (กรมป้องกันและบรรเทาสาธารณภัย) ส่วนเหตุเจ็บป่วยฉุกเฉินโทร 1669'
+    },
+    // {privacy} and {terms} become links to privacy.html and terms.html
+    'demo.p5': {
+      en: 'What you send (accounts, reports) is test data. Admins can see it and it may be deleted when the event ends. See the “{privacy}” and “{terms}”.',
+      th: 'สิ่งที่คุณส่ง (บัญชี การแจ้งเหตุ) เป็นข้อมูลทดสอบ ผู้ดูแลระบบเห็นได้ และอาจถูกลบเมื่อจบงาน ดู “{privacy}” และ “{terms}”'
+    },
+    'demo.privacy': { en: 'Privacy Policy', th: 'นโยบายความเป็นส่วนตัว' },
+    'demo.terms': { en: 'Terms', th: 'ข้อกำหนด' },
+    'demo.ok': { en: 'Got it', th: 'รับทราบ' },
+    'demo.link': { en: 'About this demo', th: 'เกี่ยวกับเว็บเดโมนี้' },
+
     // Home
     'home.title': { en: 'Flood overview', th: 'ภาพรวมน้ำท่วม' },
     'hero.region': { en: 'Central Thailand', th: 'ภาคกลาง' },

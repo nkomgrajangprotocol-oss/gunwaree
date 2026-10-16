@@ -716,3 +716,9 @@ textarea.field__input { min-height: 7rem; resize: vertical; line-height: 1.6; }
     transition: none !important;
   }
 }
+
+/* Hardware control: the "shown as infographics" warning (js/admin/hardware.js), in the notice dialog from css/app.css */
+.notice__icon--warn { background: #FCEBD2; color: #A8621A; }
+.notice__icon--warn svg { width: 26px; height: 26px; }
+.hw-warn__body { font-size: var(--fs-16); line-height: 1.65; color: var(--c-text); }
+.hw-warn__foot { justify-content: flex-end; }

@@ -175,6 +175,12 @@
 
     // Hardware control
     'ad.hw.title': { en: 'Hardware control', th: 'ควบคุมระบบระบายน้ำ' },
+    'ad.hw.warnTitle': { en: 'Hardware shown as infographics', th: 'แสดงฮาร์ดแวร์เป็นอินโฟกราฟิก' },
+    'ad.hw.warnBody': {
+      en: 'The real components used to show the hardware are not stable yet, so this page shows it as infographics and text instead.',
+      th: 'ส่วนที่ใช้แสดงฮาร์ดแวร์จริงยังไม่เสถียร หน้านี้จึงแสดงเป็นอินโฟกราฟิกและข้อความแทน'
+    },
+    'ad.hw.warnOk': { en: 'Got it', th: 'รับทราบ' },
     'ad.hw.lead': {
       en: 'The team’s test rig: one ESP32 water sensor and one pump. Commands reach the board the next time it checks in, about every 5 seconds.',
       th: 'ชุดทดลองของทีม: เซนเซอร์วัดระดับน้ำ ESP32 1 ตัว และปั๊ม 1 ตัว คำสั่งถึงบอร์ดเมื่อบอร์ดถามเข้ามาครั้งถัดไป ประมาณทุก 5 วินาที'

@@ -2,7 +2,7 @@
 
    Endpoint                 Who            Used for
    POST /incidents          client         send a report {description, address, phone, lat, lon}
-   GET /incidents/mine      client         my reports, polled every 30 seconds
+   GET /incidents/mine      client         my reports, on opening the page or its tab and after sending (no timed refresh)
 
    Rules from the plan: user_id comes from the token, never from the form; lat and lon are optional
    but sent together, as numbers; the phone check here is a convenience, the backend validates;
@@ -18,7 +18,6 @@
   var $ = function (sel, root) { return (root || document).querySelector(sel); };
 
   var MAX_DESC = 500;
-  var POLL_MS = 30 * 1000;
   var BANGKOK = [13.7563, 100.5018];
   var STATUS_ORDER = ['new', 'in_progress', 'resolved'];
   var STATUS_TONE = { new: 'teal', in_progress: 'yellow', resolved: 'green' };
@@ -527,8 +526,8 @@
   renderGates();
   updateCounter();
   setTab(window.location.hash.slice(1) || 'new');
+  // No timed refresh on this page: "My reports" loads when the page opens, when its tab is opened and after a report is sent
   loadMine();
-  setInterval(function () { if (!document.hidden) loadMine(); }, POLL_MS);
 
   document.addEventListener('gw:lang', renderText);
   document.addEventListener('gw:session', function () { renderGates(); renderMine(); });

@@ -570,7 +570,7 @@
       if (state.items.length) state.listShown = true;
       if (Object.keys(state.modes).some(function (k) { return state.modes[k] === 'live'; })) GW.pulse();
       var onSample = Object.keys(state.modes).some(function (k) { return state.modes[k] === 'sample'; });
-      if (onSample && !retryTimer) retryTimer = setTimeout(function () { retryTimer = 0; load(); }, 15000);
+      if (onSample && !retryTimer) retryTimer = setTimeout(function () { retryTimer = 0; if (GW.live.on()) load(); }, 15000);
     });
   }
 
@@ -585,5 +585,6 @@
 
   load();
   loadKit();
-  setInterval(function () { if (!document.hidden) { load(); loadKit(); } }, REFRESH_MS);
+  setInterval(function () { if (!document.hidden && GW.live.on()) { load(); loadKit(); } }, REFRESH_MS);
+  document.addEventListener('gw:live', function (e) { if (e.detail.on) { load(); loadKit(); } });
 })(window.GW = window.GW || {});
