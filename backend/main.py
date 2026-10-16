@@ -30,10 +30,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="GunWaree API", lifespan=lifespan)
 
-# origin ที่อนุญาต: Live Server (5500) สำหรับทดสอบ และโดเมนเว็บเดโมบน Vercel ก่อนส่งงานให้เอา Live Server ออก
+# origin ที่อนุญาต: โดเมนเว็บเดโมบน Vercel เท่านั้น ถ้าจะรันหน้าเว็บในเครื่อง (Live Server) ให้เพิ่ม origin ของตัวเองชั่วคราว
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5500", "http://localhost:5500", "https://gunwaree-frontend.vercel.app"],
+    allow_origins=["https://gunwaree-frontend.vercel.app"],
     allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
 )

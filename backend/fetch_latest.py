@@ -195,6 +195,10 @@ def fetch_rid() -> dict:
             if not wanted:
                 result["failed"][date] = "ไม่มีข้อมูลเขื่อนที่ต้องการ"
                 continue
+            # RID ส่งแถวของวันนี้มาก่อนมีค่า ถ้าทุกช่องเป็น null ทุกเขื่อน ไม่บันทึกแถวว่าง แล้วลองวันถัดไป (0 ถือว่ามีค่า)
+            if not any(d.get(k) is not None for d in wanted for k in ("percent_storage", "volume", "inflow", "outflow")):
+                result["failed"][date] = "ยังไม่มีค่าของวันนี้"
+                continue
         except Exception as e:
             result["failed"][date] = f"{type(e).__name__}: {e}"
             continue
