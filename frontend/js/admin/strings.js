@@ -215,10 +215,10 @@
       en: 'Experimental rig: this page drives the relay of the ESP32 test rig for demonstration only. No real pump is connected (a relay LED shows the result). The fail-safe test did not fully pass (with Wi-Fi up but no internet, the relay did not switch off within 90 seconds). Do not connect a real pump or mains equipment to this rig.',
       th: 'ชุดทดลองต้นแบบ: หน้านี้สั่งรีเลย์ของชุดทดลอง ESP32 เพื่อสาธิตเท่านั้น ไม่ได้ต่อปั๊มจริง (ใช้ไฟ LED บนรีเลย์แสดงผล) การทดสอบ fail-safe ยังไม่ผ่านครบ (กรณี Wi-Fi ต่ออยู่แต่ไม่มีอินเทอร์เน็ต รีเลย์ไม่ดับภายใน 90 วินาที) ห้ามต่อปั๊มหรืออุปกรณ์ไฟฟ้าจริงกับชุดนี้'
     },
-    'ad.hw.warnTitle': { en: 'Hardware shown as infographics', th: 'แสดงฮาร์ดแวร์เป็นอินโฟกราฟิก' },
+    'ad.hw.warnTitle': { en: 'Concept infographic', th: 'อินโฟกราฟิกแสดงแนวคิดการทำงาน' },
     'ad.hw.warnBody': {
-      en: 'The real components used to show the hardware are not stable yet, so this page shows it as infographics and text instead.',
-      th: 'ส่วนที่ใช้แสดงฮาร์ดแวร์จริงยังไม่เสถียร หน้านี้จึงแสดงเป็นอินโฟกราฟิกและข้อความแทน'
+      en: 'The hardware is still experimental and not stable. The graphics and text in this section are an infographic of how a drainage workflow would work in concept, not a live pump. The only live part is the relay of the ESP32 test rig.',
+      th: 'ฮาร์ดแวร์ของระบบยังอยู่ระหว่างทดลองและยังไม่เสถียร ภาพและข้อความในส่วนนี้จึงเป็นอินโฟกราฟิกแสดงลำดับการทำงานของระบบระบายน้ำตามแนวคิด ไม่ใช่การทำงานของปั๊มจริง ส่วนที่ทำงานจริงมีเฉพาะรีเลย์ของชุดทดลอง ESP32'
     },
     'ad.hw.warnOk': { en: 'Got it', th: 'รับทราบ' },
     'ad.hw.lead': {
